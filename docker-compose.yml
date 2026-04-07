@@ -1,0 +1,42 @@
+services:
+  mariadb:
+    image: mariadb:11.4
+    container_name: doppio-box-mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpass
+      MARIADB_DATABASE: doppio_box
+      MARIADB_USER: doppio
+      MARIADB_PASSWORD: doppio
+    ports:
+      - "3306:3306"
+    volumes:
+      - doppio_mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+
+  backend:
+    build: ./backend
+    container_name: doppio-box-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: mysql+pymysql://doppio:doppio@mariadb:3306/doppio_box
+      FRAPPE_SITE_URL: ${FRAPPE_SITE_URL:-https://your-frappe-site.example.com}
+      FRAPPE_API_KEY: ${FRAPPE_API_KEY:-}
+      FRAPPE_API_SECRET: ${FRAPPE_API_SECRET:-}
+      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-http://localhost:5173}
+      BENCH_PATH: ${BENCH_PATH:-/frappe-bench}
+      BENCH_COMMAND_TIMEOUT_SECONDS: ${BENCH_COMMAND_TIMEOUT_SECONDS:-900}
+    ports:
+      - "8001:8000"
+    volumes:
+      - ${BENCH_PATH:-/home/jenish/frappe16/frappe-bench16}:/frappe-bench
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+volumes:
+  doppio_mariadb_data:
