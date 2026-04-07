@@ -16,6 +16,7 @@ from .schemas import (
   AutomationRunOut,
   BenchAppInstallCreate,
   BenchCommandOut,
+  BenchPathCreate,
   BenchSiteCreate,
   BenchSummaryOut,
   FrappeModuleOut,
@@ -24,6 +25,7 @@ from .schemas import (
   MetricOut,
   ModuleAutomationCreate,
   ModuleAutomationOut,
+  TerminalCommandCreate,
   WorkspaceOut,
 )
 from .seed import seed_defaults
@@ -86,6 +88,16 @@ def bench_summary() -> BenchSummaryOut:
   return bench_manager.summary()
 
 
+@app.post("/api/bench/path", response_model=BenchCommandOut)
+def set_bench_path(payload: BenchPathCreate) -> BenchCommandOut:
+  return bench_manager.set_bench_path(payload.path)
+
+
+@app.post("/api/bench/start", response_model=BenchCommandOut)
+def start_bench() -> BenchCommandOut:
+  return bench_manager.start_bench()
+
+
 @app.post("/api/bench/apps/install", response_model=BenchCommandOut)
 def install_bench_app(payload: BenchAppInstallCreate) -> BenchCommandOut:
   try:
@@ -108,6 +120,14 @@ def create_bench_site(payload: BenchSiteCreate) -> BenchCommandOut:
       payload.db_root_password,
       payload.install_apps,
     )
+  except ValueError as exc:
+    raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/terminal/run", response_model=BenchCommandOut)
+def run_terminal_command(payload: TerminalCommandCreate) -> BenchCommandOut:
+  try:
+    return bench_manager.run_terminal_action(payload.action, payload.site_name)
   except ValueError as exc:
     raise HTTPException(status_code=400, detail=str(exc)) from exc
 

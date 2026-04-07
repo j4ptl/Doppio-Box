@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field, HttpUrl
 
@@ -127,11 +128,26 @@ class BenchSiteCreate(BaseModel):
   install_apps: list[str] = Field(default_factory=list)
 
 
+class BenchPathCreate(BaseModel):
+  path: str = Field(min_length=2, max_length=500)
+
+
 class BenchCommandOut(BaseModel):
   status: str
   message: str
   command: list[str]
   output: str = ""
+
+
+class TerminalCommandCreate(BaseModel):
+  action: Literal[
+    "bench-version",
+    "bench-list-sites",
+    "bench-list-apps",
+    "bench-migrate",
+    "bench-clear-cache",
+  ]
+  site_name: str = ""
 
 
 class NetworkInterfaceOut(BaseModel):

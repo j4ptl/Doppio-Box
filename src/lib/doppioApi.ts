@@ -118,11 +118,27 @@ export type BenchSiteCreateRequest = {
   install_apps: string[];
 };
 
+export type BenchPathRequest = {
+  path: string;
+};
+
 export type BenchCommandResult = {
   status: string;
   message: string;
   command: string[];
   output: string;
+};
+
+export type TerminalCommandAction =
+  | "bench-version"
+  | "bench-list-sites"
+  | "bench-list-apps"
+  | "bench-migrate"
+  | "bench-clear-cache";
+
+export type TerminalCommandRequest = {
+  action: TerminalCommandAction;
+  site_name: string;
 };
 
 export type NetworkInterface = {
@@ -173,8 +189,13 @@ type ElectronNetworkAccess = {
   copyText: (text: string) => Promise<{ status: string }>;
 };
 
+type ElectronBenchPath = {
+  selectFolder: () => Promise<{ status: string; path: string }>;
+};
+
 declare global {
   interface Window {
+    benchPath?: ElectronBenchPath;
     networkAccess?: ElectronNetworkAccess;
   }
 }
@@ -290,6 +311,44 @@ export async function loadBenchSummary(): Promise<BenchSummary> {
   return (await response.json()) as BenchSummary;
 }
 
+export async function setBenchPath(
+  payload: BenchPathRequest
+): Promise<BenchCommandResult> {
+  const response = await fetch(apiUrl("/api/bench/path"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Bench path update failed with status ${response.status}`);
+  }
+
+  return (await response.json()) as BenchCommandResult;
+}
+
+export async function startBench(): Promise<BenchCommandResult> {
+  const response = await fetch(apiUrl("/api/bench/start"), {
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Bench start failed with status ${response.status}`);
+  }
+
+  return (await response.json()) as BenchCommandResult;
+}
+
+export async function selectBenchFolder(): Promise<string> {
+  if (!window.benchPath) {
+    return "";
+  }
+
+  const result = await window.benchPath.selectFolder();
+
+  return result.status === "selected" ? result.path : "";
+}
+
 export async function installBenchApp(
   payload: BenchAppInstallRequest
 ): Promise<BenchCommandResult> {
@@ -317,6 +376,22 @@ export async function createBenchSite(
 
   if (!response.ok) {
     throw new Error(`Bench site create failed with status ${response.status}`);
+  }
+
+  return (await response.json()) as BenchCommandResult;
+}
+
+export async function runTerminalCommand(
+  payload: TerminalCommandRequest
+): Promise<BenchCommandResult> {
+  const response = await fetch(apiUrl("/api/terminal/run"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Terminal command failed with status ${response.status}`);
   }
 
   return (await response.json()) as BenchCommandResult;

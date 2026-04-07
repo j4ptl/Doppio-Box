@@ -12,6 +12,9 @@ from .schemas import (
 )
 
 
+BENCH_PATH_STATE = Path.cwd() / ".doppio" / "bench_path.txt"
+
+
 APP_CATALOG = [
   {
     "key": "erpnext",
@@ -72,8 +75,9 @@ APP_CATALOG = [
 
 class BenchManager:
   def __init__(self, bench_path: str, timeout_seconds: int) -> None:
-    self.bench_path = Path(bench_path).expanduser()
+    self.bench_path = self._load_saved_path() or Path(bench_path).expanduser()
     self.timeout_seconds = timeout_seconds
+    self.bench_process: subprocess.Popen[bytes] | None = None
 
   def summary(self) -> BenchSummaryOut:
     installed_apps = self._installed_apps()
@@ -86,7 +90,7 @@ class BenchManager:
       default_site = sites[0].name
 
     return BenchSummaryOut(
-      bench_path=str(self.bench_path),
+      bench_path="Configured" if self.bench_path.exists() else "Not configured",
       exists=self.bench_path.exists(),
       default_site=default_site,
       apps_installed=len(installed_apps),
@@ -152,6 +156,106 @@ class BenchManager:
 
     return self._run_commands([command])
 
+  def set_bench_path(self, bench_path: str) -> BenchCommandOut:
+    path = Path(bench_path).expanduser()
+
+    if not self._is_valid_bench_path(path):
+      return BenchCommandOut(
+        status="failed",
+        message="Selected folder is not a valid Frappe Bench. Choose a folder with apps, sites, and a Procfile.",
+        command=[],
+      )
+
+    self.bench_path = path
+    BENCH_PATH_STATE.parent.mkdir(parents=True, exist_ok=True)
+    BENCH_PATH_STATE.write_text(str(path), encoding="utf-8")
+
+    return BenchCommandOut(
+      status="completed",
+      message="Frappe Bench path configured.",
+      command=["doppio", "set-bench-path", "********"],
+      output="Bench folder saved for local automation.",
+    )
+
+  def start_bench(self) -> BenchCommandOut:
+    if not self._is_valid_bench_path(self.bench_path):
+      return BenchCommandOut(
+        status="failed",
+        message="Bench path is not configured. Set a valid Frappe Bench folder first.",
+        command=["bench", "start"],
+      )
+
+    if self.bench_process and self.bench_process.poll() is None:
+      return BenchCommandOut(
+        status="completed",
+        message="Frappe Bench is already starting or running from Doppio.",
+        command=["bench", "start"],
+      )
+
+    webserver_port = int(self._common_site_config().get("webserver_port", 8000))
+
+    if _port_is_open("127.0.0.1", webserver_port):
+      return BenchCommandOut(
+        status="completed",
+        message="Frappe Bench is already reachable.",
+        command=["bench", "start"],
+        output=f"Frappe is already available at http://localhost:{webserver_port}.",
+      )
+
+    log_path = Path.cwd() / ".doppio" / "bench-start.log"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+      with log_path.open("ab") as log_file:
+        self.bench_process = subprocess.Popen(
+          ["bench", "start"],
+          cwd=self.bench_path,
+          stdout=log_file,
+          stderr=subprocess.STDOUT,
+          start_new_session=True,
+        )
+    except FileNotFoundError:
+      return BenchCommandOut(
+        status="failed",
+        message="The bench command was not found in this backend process PATH.",
+        command=["bench", "start"],
+      )
+
+    return BenchCommandOut(
+      status="running",
+      message="Frappe Bench start command launched.",
+      command=["bench", "start"],
+      output="Bench is starting in the background. Open Frappe after a few seconds at http://localhost:8000.",
+    )
+
+  def run_terminal_action(self, action: str, site_name: str = "") -> BenchCommandOut:
+    site_required_actions = {
+      "bench-list-apps",
+      "bench-migrate",
+      "bench-clear-cache",
+    }
+
+    if action in site_required_actions and not site_name:
+      return BenchCommandOut(
+        status="failed",
+        message="Select a site before running this terminal action.",
+        command=[],
+      )
+
+    commands = {
+      "bench-version": ["bench", "--version"],
+      "bench-list-sites": ["bench", "list-sites"],
+      "bench-list-apps": ["bench", "--site", site_name, "list-apps"],
+      "bench-migrate": ["bench", "--site", site_name, "migrate"],
+      "bench-clear-cache": ["bench", "--site", site_name, "clear-cache"],
+    }
+    command = commands.get(action)
+
+    if not command:
+      raise ValueError(f"Unsupported terminal action: {action}")
+
+    return self._run_commands([command])
+
   def _catalog_item(self, app_key: str) -> dict[str, str]:
     for item in APP_CATALOG:
       if item["key"] == app_key:
@@ -179,7 +283,7 @@ class BenchManager:
       branch=item["branch"],
       installed=item["key"] in installed_apps,
       install_command=install_command,
-      desk_url=f"http://127.0.0.1:{webserver_port}/{item['desk_route']}",
+      desk_url=f"http://localhost:{webserver_port}/{item['desk_route']}",
     )
 
   def _sites(self, webserver_port: str) -> list[BenchSiteOut]:
@@ -191,8 +295,8 @@ class BenchManager:
     return [
       BenchSiteOut(
         name=path.name,
-        path=str(path),
-        desk_url=f"http://127.0.0.1:{webserver_port}/app",
+        path="Hidden",
+        desk_url=f"http://localhost:{webserver_port}/app",
         config_found=(path / "site_config.json").exists(),
       )
       for path in sorted(sites_path.iterdir())
@@ -227,9 +331,28 @@ class BenchManager:
     except json.JSONDecodeError:
       return {}
 
+  def _load_saved_path(self) -> Path | None:
+    if not BENCH_PATH_STATE.exists():
+      return None
+
+    saved_path = Path(BENCH_PATH_STATE.read_text(encoding="utf-8").strip()).expanduser()
+
+    if self._is_valid_bench_path(saved_path):
+      return saved_path
+
+    return None
+
+  def _is_valid_bench_path(self, path: Path) -> bool:
+    return (
+      path.exists()
+      and path.is_dir()
+      and (path / "apps").is_dir()
+      and (path / "sites").is_dir()
+      and (path / "Procfile").is_file()
+    )
+
   def _access_urls(self, webserver_port: str) -> list[BenchAccessOut]:
-    host_ip = _host_ip()
-    urls = [
+    return [
       BenchAccessOut(
         label="Doppio UI",
         url="http://localhost:5173",
@@ -246,24 +369,6 @@ class BenchManager:
         detail="Local ERPNext/Frappe Desk served by bench.",
       ),
     ]
-
-    if host_ip:
-      urls.append(
-        BenchAccessOut(
-          label="LAN Frappe",
-          url=f"http://{host_ip}:{webserver_port}",
-          detail="Use this from another device on the same network if the firewall allows it.",
-        )
-      )
-      urls.append(
-        BenchAccessOut(
-          label="LAN Doppio",
-          url=f"http://{host_ip}:5173",
-          detail="Use this for direct access to the Doppio website from the same network.",
-        )
-      )
-
-    return urls
 
   def _run_commands(self, commands: list[list[str]]) -> BenchCommandOut:
     if not self.bench_path.exists():
@@ -342,15 +447,9 @@ def _mask_command(command: list[str]) -> list[str]:
   return masked
 
 
-def _host_ip() -> str:
+def _port_is_open(host: str, port: int) -> bool:
   try:
-    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-      sock.connect(("8.8.8.8", 80))
-      ip_address = sock.getsockname()[0]
-
-    if ip_address and not ip_address.startswith("127."):
-      return ip_address
+    with socket.create_connection((host, port), timeout=0.5):
+      return True
   except OSError:
-    return ""
-
-  return ""
+    return False

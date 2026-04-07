@@ -1,4 +1,4 @@
-const { app, BrowserWindow, clipboard, ipcMain, shell } = require("electron");
+const { app, BrowserWindow, clipboard, dialog, ipcMain, shell } = require("electron");
 const path = require("node:path");
 const { getNetworkAccess } = require("./networkAccess.cjs");
 
@@ -32,6 +32,19 @@ ipcMain.handle("network-access:open", async (_event, url) => {
 ipcMain.handle("network-access:copy", (_event, text) => {
   clipboard.writeText(text);
   return { status: "copied" };
+});
+
+ipcMain.handle("bench-path:select", async () => {
+  const result = await dialog.showOpenDialog(BrowserWindow.getFocusedWindow(), {
+    title: "Select Frappe Bench Folder",
+    properties: ["openDirectory"],
+  });
+
+  if (result.canceled || !result.filePaths.length) {
+    return { status: "cancelled", path: "" };
+  }
+
+  return { status: "selected", path: result.filePaths[0] };
 });
 
 app.whenReady().then(createWindow);

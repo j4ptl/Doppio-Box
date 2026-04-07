@@ -5,3 +5,7 @@ contextBridge.exposeInMainWorld("networkAccess", {
   openExternal: (url) => ipcRenderer.invoke("network-access:open", url),
   copyText: (text) => ipcRenderer.invoke("network-access:copy", text),
 });
+
+contextBridge.exposeInMainWorld("benchPath", {
+  selectFolder: () => ipcRenderer.invoke("bench-path:select"),
+});

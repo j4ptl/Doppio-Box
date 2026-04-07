@@ -5,6 +5,7 @@ import {
   BenchSummary,
   FrappeModule,
   ManagedSite,
+  TerminalCommandAction,
   WorkspaceData,
   automateFrappeModule,
   createBenchSite,
@@ -12,6 +13,10 @@ import {
   loadBenchSummary,
   loadFrappeModules,
   loadWorkspaceData,
+  runTerminalCommand,
+  selectBenchFolder,
+  setBenchPath,
+  startBench,
 } from "./lib/doppioApi";
 
 type Page = "overview" | "modules" | "setup" | "access";
@@ -69,7 +74,13 @@ type PageRendererProps = {
   dbRootUsername: string;
   dbRootPassword: string;
   siteInstallApps: string[];
+  benchPathInput: string;
+  benchPathSaving: boolean;
+  benchStarting: boolean;
   terminalLog: string[];
+  terminalAction: TerminalCommandAction;
+  terminalSiteName: string;
+  terminalRunning: boolean;
   onNavigate: (page: Page) => void;
   onSelectSite: (siteId: number | null) => void;
   onSelectModule: (moduleKey: string) => void;
@@ -83,6 +94,13 @@ type PageRendererProps = {
   onDbRootPassword: (value: string) => void;
   onToggleSiteInstallApp: (appKey: string) => void;
   onCreateSite: () => void;
+  onBenchPathInput: (value: string) => void;
+  onSelectBenchPath: () => void;
+  onSaveBenchPath: () => void;
+  onStartBench: () => void;
+  onTerminalAction: (action: TerminalCommandAction) => void;
+  onTerminalSiteName: (siteName: string) => void;
+  onRunTerminalCommand: () => void;
   onClearTerminal: () => void;
 };
 
@@ -103,8 +121,15 @@ function App() {
     "Doppio local terminal ready.",
     "Use setup and module buttons to run bench automation through the backend.",
   ]);
+  const [terminalAction, setTerminalAction] =
+    useState<TerminalCommandAction>("bench-version");
+  const [terminalSiteName, setTerminalSiteName] = useState("");
+  const [terminalRunning, setTerminalRunning] = useState(false);
   const [installingKey, setInstallingKey] = useState("");
   const [creatingSite, setCreatingSite] = useState(false);
+  const [benchPathInput, setBenchPathInput] = useState("");
+  const [benchPathSaving, setBenchPathSaving] = useState(false);
+  const [benchStarting, setBenchStarting] = useState(false);
   const [siteName, setSiteName] = useState("new-site.local");
   const [adminPassword, setAdminPassword] = useState("");
   const [dbRootUsername, setDbRootUsername] = useState("root");
@@ -129,6 +154,7 @@ function App() {
 
       if (benchResult.status === "fulfilled") {
         setBench(benchResult.value);
+        setTerminalSiteName(benchResult.value.default_site || benchResult.value.sites[0]?.name || "");
       } else {
         setSetupMessage("Bench summary is not available. Start the backend and check BENCH_PATH.");
       }
@@ -224,6 +250,81 @@ function App() {
 
   function clearTerminalLog() {
     setTerminalLog(["Doppio local terminal cleared."]);
+  }
+
+  async function handleRunTerminalCommand() {
+    setTerminalRunning(true);
+    appendTerminalLog(
+      `$ doppio-terminal ${terminalAction}${terminalSiteName ? ` --site ${terminalSiteName}` : ""}`
+    );
+
+    try {
+      const result = await runTerminalCommand({
+        action: terminalAction,
+        site_name: terminalSiteName,
+      });
+      appendBenchResult(result);
+    } catch (error) {
+      appendTerminalLog(
+        `ERROR: ${error instanceof Error ? error.message : "Terminal command failed"}`
+      );
+    } finally {
+      setTerminalRunning(false);
+    }
+  }
+
+  async function handleSaveBenchPath() {
+    if (!benchPathInput.trim()) {
+      appendTerminalLog("ERROR: Enter a Frappe Bench folder path first.");
+      return;
+    }
+
+    setBenchPathSaving(true);
+    setSetupMessage("Validating Frappe Bench folder...");
+    appendTerminalLog("$ doppio set-bench-path ********");
+
+    try {
+      const result = await setBenchPath({ path: benchPathInput.trim() });
+      setSetupMessage(result.message);
+      appendBenchResult(result);
+      await refreshBench();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Bench path update failed";
+      setSetupMessage(message);
+      appendTerminalLog(`ERROR: ${message}`);
+    } finally {
+      setBenchPathSaving(false);
+    }
+  }
+
+  async function handleSelectBenchPath() {
+    const selectedPath = await selectBenchFolder();
+
+    if (!selectedPath) {
+      appendTerminalLog("Folder picker is available in Electron mode. In browser mode, paste the bench path manually.");
+      return;
+    }
+
+    setBenchPathInput(selectedPath);
+    appendTerminalLog("$ doppio selected bench folder");
+  }
+
+  async function handleStartBench() {
+    setBenchStarting(true);
+    setSetupMessage("Starting Frappe Bench from Doppio...");
+    appendTerminalLog("$ bench start");
+
+    try {
+      const result = await startBench();
+      setSetupMessage(result.message);
+      appendBenchResult(result);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Bench start failed";
+      setSetupMessage(message);
+      appendTerminalLog(`ERROR: ${message}`);
+    } finally {
+      setBenchStarting(false);
+    }
   }
 
   async function handleModuleAutomation(moduleItem: FrappeModule) {
@@ -352,7 +453,13 @@ function App() {
     dbRootUsername,
     dbRootPassword,
     siteInstallApps,
+    benchPathInput,
+    benchPathSaving,
+    benchStarting,
     terminalLog,
+    terminalAction,
+    terminalSiteName,
+    terminalRunning,
     onNavigate: navigatePage,
     onSelectSite: setSelectedSiteId,
     onSelectModule: setSelectedModuleKey,
@@ -366,6 +473,13 @@ function App() {
     onDbRootPassword: setDbRootPassword,
     onToggleSiteInstallApp: toggleSiteInstallApp,
     onCreateSite: handleCreateSite,
+    onBenchPathInput: setBenchPathInput,
+    onSelectBenchPath: handleSelectBenchPath,
+    onSaveBenchPath: handleSaveBenchPath,
+    onStartBench: handleStartBench,
+    onTerminalAction: setTerminalAction,
+    onTerminalSiteName: setTerminalSiteName,
+    onRunTerminalCommand: handleRunTerminalCommand,
     onClearTerminal: clearTerminalLog,
   });
 
@@ -549,6 +663,9 @@ function renderPage(props: PageRendererProps) {
           dbRootUsername={props.dbRootUsername}
           dbRootPassword={props.dbRootPassword}
           siteInstallApps={props.siteInstallApps}
+          benchPathInput={props.benchPathInput}
+          benchPathSaving={props.benchPathSaving}
+          benchStarting={props.benchStarting}
           onRefreshBench={props.onRefreshBench}
           onInstallApp={props.onInstallApp}
           onSiteName={props.onSiteName}
@@ -557,6 +674,10 @@ function renderPage(props: PageRendererProps) {
           onDbRootPassword={props.onDbRootPassword}
           onToggleSiteInstallApp={props.onToggleSiteInstallApp}
           onCreateSite={props.onCreateSite}
+          onBenchPathInput={props.onBenchPathInput}
+          onSelectBenchPath={props.onSelectBenchPath}
+          onSaveBenchPath={props.onSaveBenchPath}
+          onStartBench={props.onStartBench}
         />
       );
     case "access":
@@ -570,9 +691,16 @@ function renderPage(props: PageRendererProps) {
           selectedSiteId={props.selectedSiteId}
           running={props.running}
           terminalLog={props.terminalLog}
+          terminalAction={props.terminalAction}
+          terminalSiteName={props.terminalSiteName}
+          terminalRunning={props.terminalRunning}
           onNavigate={props.onNavigate}
           onSelectModule={props.onSelectModule}
           onAutomate={props.onAutomate}
+          onStartBench={props.onStartBench}
+          onTerminalAction={props.onTerminalAction}
+          onTerminalSiteName={props.onTerminalSiteName}
+          onRunTerminalCommand={props.onRunTerminalCommand}
           onClearTerminal={props.onClearTerminal}
         />
       );
@@ -747,6 +875,9 @@ function SetupPage({
   dbRootUsername,
   dbRootPassword,
   siteInstallApps,
+  benchPathInput,
+  benchPathSaving,
+  benchStarting,
   onRefreshBench,
   onInstallApp,
   onSiteName,
@@ -755,6 +886,10 @@ function SetupPage({
   onDbRootPassword,
   onToggleSiteInstallApp,
   onCreateSite,
+  onBenchPathInput,
+  onSelectBenchPath,
+  onSaveBenchPath,
+  onStartBench,
 }: {
   bench: BenchSummary | null;
   setupMessage: string;
@@ -765,6 +900,9 @@ function SetupPage({
   dbRootUsername: string;
   dbRootPassword: string;
   siteInstallApps: string[];
+  benchPathInput: string;
+  benchPathSaving: boolean;
+  benchStarting: boolean;
   onRefreshBench: () => void;
   onInstallApp: (app: BenchApp) => void;
   onSiteName: (value: string) => void;
@@ -773,6 +911,10 @@ function SetupPage({
   onDbRootPassword: (value: string) => void;
   onToggleSiteInstallApp: (appKey: string) => void;
   onCreateSite: () => void;
+  onBenchPathInput: (value: string) => void;
+  onSelectBenchPath: () => void;
+  onSaveBenchPath: () => void;
+  onStartBench: () => void;
 }) {
   return (
     <section className="workspace-grid setup-layout">
@@ -785,6 +927,50 @@ function SetupPage({
           <button type="button" className="secondary-button small-button" onClick={onRefreshBench}>
             Refresh
           </button>
+        </div>
+        <div className="bench-path-box">
+          <div>
+            <span>Frappe Bench folder</span>
+            <strong>{bench?.exists ? "Bench folder connected" : "Set bench folder"}</strong>
+            <p>
+              Select the local folder that contains the Frappe Bench `apps`,
+              `sites`, and `Procfile`, then Doppio will run app and site
+              automation inside that folder.
+            </p>
+          </div>
+          <label className="control-field">
+            <span>Bench path</span>
+            <input
+              value={benchPathInput}
+              onChange={(event) => onBenchPathInput(event.target.value)}
+              placeholder="/home/jenish/frappe16/frappe-bench16"
+            />
+          </label>
+          <div className="inline-actions">
+            <button
+              type="button"
+              className="secondary-button small-button"
+              onClick={onSelectBenchPath}
+            >
+              Select folder
+            </button>
+            <button
+              type="button"
+              className="secondary-button small-button"
+              disabled={benchPathSaving || !benchPathInput.trim()}
+              onClick={onSaveBenchPath}
+            >
+              {benchPathSaving ? "Saving path" : "Use this bench folder"}
+            </button>
+            <button
+              type="button"
+              className="secondary-button small-button"
+              disabled={benchStarting || !bench?.exists}
+              onClick={onStartBench}
+            >
+              {benchStarting ? "Starting bench" : "Start Frappe Bench"}
+            </button>
+          </div>
         </div>
         <div className="setup-grid">
           {bench?.apps.map((app) => (
@@ -882,9 +1068,16 @@ function TerminalPage({
   selectedSiteId,
   running,
   terminalLog,
+  terminalAction,
+  terminalSiteName,
+  terminalRunning,
   onNavigate,
   onSelectModule,
   onAutomate,
+  onStartBench,
+  onTerminalAction,
+  onTerminalSiteName,
+  onRunTerminalCommand,
   onClearTerminal,
 }: {
   bench: BenchSummary | null;
@@ -895,11 +1088,20 @@ function TerminalPage({
   selectedSiteId: number | null;
   running: boolean;
   terminalLog: string[];
+  terminalAction: TerminalCommandAction;
+  terminalSiteName: string;
+  terminalRunning: boolean;
   onNavigate: (page: Page) => void;
   onSelectModule: (moduleKey: string) => void;
   onAutomate: (moduleItem: FrappeModule) => void;
+  onStartBench: () => void;
+  onTerminalAction: (action: TerminalCommandAction) => void;
+  onTerminalSiteName: (siteName: string) => void;
+  onRunTerminalCommand: () => void;
   onClearTerminal: () => void;
 }) {
+  const siteRequired = terminalActionRequiresSite(terminalAction);
+
   return (
     <>
       <section className="metrics-grid" aria-label="Local automation overview">
@@ -938,7 +1140,7 @@ function TerminalPage({
           </div>
           <p className="privacy-note">
             IP, SSH, hostname, and network service sections are removed from this page.
-            Doppio only shows local command progress from actions you start with buttons.
+            Doppio connects to the local OS terminal only through allowlisted backend actions.
           </p>
           <pre className="mini-terminal" aria-label="Automation terminal output">
             {terminalLog.map((line, index) => (
@@ -965,6 +1167,9 @@ function TerminalPage({
           <button type="button" className="ghost-button" onClick={() => onNavigate("modules")}>
             Open module gallery
           </button>
+          <button type="button" className="ghost-button" disabled={!bench?.exists} onClick={onStartBench}>
+            Start Frappe Bench
+          </button>
           <label className="control-field">
             <span>Automate module</span>
             <select value={selectedModuleKey} onChange={(event) => onSelectModule(event.target.value)}>
@@ -983,6 +1188,47 @@ function TerminalPage({
           >
             {running ? "Running automation" : "Automate selected module"}
           </button>
+
+          <div className="terminal-runner">
+            <p className="eyebrow">OS Terminal Bridge</p>
+            <label className="control-field">
+              <span>Terminal action</span>
+              <select
+                value={terminalAction}
+                onChange={(event) =>
+                  onTerminalAction(event.target.value as TerminalCommandAction)
+                }
+              >
+                <option value="bench-version">Bench version</option>
+                <option value="bench-list-sites">List bench sites</option>
+                <option value="bench-list-apps">List site apps</option>
+                <option value="bench-migrate">Migrate selected site</option>
+                <option value="bench-clear-cache">Clear selected site cache</option>
+              </select>
+            </label>
+            <label className="control-field">
+              <span>Bench site</span>
+              <select
+                value={terminalSiteName}
+                onChange={(event) => onTerminalSiteName(event.target.value)}
+              >
+                <option value="">No site selected</option>
+                {bench?.sites.map((site) => (
+                  <option value={site.name} key={site.name}>
+                    {site.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              className="run-button"
+              disabled={terminalRunning || (siteRequired && !terminalSiteName)}
+              onClick={onRunTerminalCommand}
+            >
+              {terminalRunning ? "Running terminal action" : "Run in mini terminal"}
+            </button>
+          </div>
         </aside>
       </section>
 
@@ -1003,14 +1249,18 @@ function TerminalPage({
             <p>Creates a local Frappe site and installs selected apps without making the user type bench commands.</p>
           </article>
           <article>
-            <span>Module automation</span>
-            <strong>Modules or Terminal page</strong>
-            <p>Checks the selected Frappe module through the live backend connection and writes progress here.</p>
+            <span>OS terminal bridge</span>
+            <strong>Allowlisted commands</strong>
+            <p>Runs selected local bench commands from the backend and writes stdout/stderr into the mini terminal.</p>
           </article>
         </div>
       </section>
     </>
   );
+}
+
+function terminalActionRequiresSite(action: TerminalCommandAction) {
+  return action === "bench-list-apps" || action === "bench-migrate" || action === "bench-clear-cache";
 }
 
 function loadTheme(): ThemeMode {
