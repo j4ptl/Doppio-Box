@@ -13,7 +13,10 @@ import {
   loadBenchSummary,
   loadFrappeModules,
   loadWorkspaceData,
+  runManualTerminalCommand,
+  runOwnerOsTerminalCommand,
   runTerminalCommand,
+  runTerminalDiagnostics,
   selectBenchFolder,
   setBenchPath,
   startBench,
@@ -78,6 +81,9 @@ type PageRendererProps = {
   benchPathSaving: boolean;
   benchStarting: boolean;
   terminalLog: string[];
+  terminalCommandInput: string;
+  ownerCommandInput: string;
+  ownerTerminalToken: string;
   terminalAction: TerminalCommandAction;
   terminalSiteName: string;
   terminalRunning: boolean;
@@ -98,6 +104,12 @@ type PageRendererProps = {
   onSelectBenchPath: () => void;
   onSaveBenchPath: () => void;
   onStartBench: () => void;
+  onTerminalCommandInput: (value: string) => void;
+  onOwnerCommandInput: (value: string) => void;
+  onOwnerTerminalToken: (value: string) => void;
+  onManualTerminalCommand: () => void;
+  onOwnerOsCommand: () => void;
+  onDiagnoseIssue: () => void;
   onTerminalAction: (action: TerminalCommandAction) => void;
   onTerminalSiteName: (siteName: string) => void;
   onRunTerminalCommand: () => void;
@@ -121,6 +133,9 @@ function App() {
     "Doppio local terminal ready.",
     "Use setup and module buttons to run bench automation through the backend.",
   ]);
+  const [terminalCommandInput, setTerminalCommandInput] = useState("bench --version");
+  const [ownerCommandInput, setOwnerCommandInput] = useState("pwd");
+  const [ownerTerminalToken, setOwnerTerminalToken] = useState("");
   const [terminalAction, setTerminalAction] =
     useState<TerminalCommandAction>("bench-version");
   const [terminalSiteName, setTerminalSiteName] = useState("");
@@ -267,6 +282,71 @@ function App() {
     } catch (error) {
       appendTerminalLog(
         `ERROR: ${error instanceof Error ? error.message : "Terminal command failed"}`
+      );
+    } finally {
+      setTerminalRunning(false);
+    }
+  }
+
+  async function handleManualTerminalCommand() {
+    const command = terminalCommandInput.trim();
+
+    if (!command) {
+      appendTerminalLog("ERROR: Enter a bench command first.");
+      return;
+    }
+
+    setTerminalRunning(true);
+    appendTerminalLog(`$ ${command}`);
+
+    try {
+      const result = await runManualTerminalCommand({ command });
+      appendBenchResult(result);
+    } catch (error) {
+      appendTerminalLog(
+        `ERROR: ${error instanceof Error ? error.message : "Manual terminal command failed"}`
+      );
+    } finally {
+      setTerminalRunning(false);
+    }
+  }
+
+  async function handleOwnerOsCommand() {
+    const command = ownerCommandInput.trim();
+
+    if (!command) {
+      appendTerminalLog("ERROR: Enter an owner OS command first.");
+      return;
+    }
+
+    setTerminalRunning(true);
+    appendTerminalLog(`$ owner-os ${command}`);
+
+    try {
+      const result = await runOwnerOsTerminalCommand({
+        command,
+        token: ownerTerminalToken,
+      });
+      appendBenchResult(result);
+    } catch (error) {
+      appendTerminalLog(
+        `ERROR: ${error instanceof Error ? error.message : "Owner OS terminal command failed"}`
+      );
+    } finally {
+      setTerminalRunning(false);
+    }
+  }
+
+  async function handleDiagnoseIssue() {
+    setTerminalRunning(true);
+    appendTerminalLog("$ doppio diagnose");
+
+    try {
+      const result = await runTerminalDiagnostics();
+      appendBenchResult(result);
+    } catch (error) {
+      appendTerminalLog(
+        `ERROR: ${error instanceof Error ? error.message : "Terminal diagnostics failed"}`
       );
     } finally {
       setTerminalRunning(false);
@@ -457,6 +537,9 @@ function App() {
     benchPathSaving,
     benchStarting,
     terminalLog,
+    terminalCommandInput,
+    ownerCommandInput,
+    ownerTerminalToken,
     terminalAction,
     terminalSiteName,
     terminalRunning,
@@ -477,6 +560,12 @@ function App() {
     onSelectBenchPath: handleSelectBenchPath,
     onSaveBenchPath: handleSaveBenchPath,
     onStartBench: handleStartBench,
+    onTerminalCommandInput: setTerminalCommandInput,
+    onOwnerCommandInput: setOwnerCommandInput,
+    onOwnerTerminalToken: setOwnerTerminalToken,
+    onManualTerminalCommand: handleManualTerminalCommand,
+    onOwnerOsCommand: handleOwnerOsCommand,
+    onDiagnoseIssue: handleDiagnoseIssue,
     onTerminalAction: setTerminalAction,
     onTerminalSiteName: setTerminalSiteName,
     onRunTerminalCommand: handleRunTerminalCommand,
@@ -511,10 +600,12 @@ function App() {
           <p className="hero-copy">{hero.copy}</p>
           <div className="hero-actions">
             <button type="button" className="primary-button" onClick={() => navigatePage("modules")}>
-              Browse modules
+              <span>Browse modules</span>
+              <span aria-hidden="true" className="button-arrow" />
             </button>
             <button type="button" className="secondary-button" onClick={() => navigatePage("setup")}>
-              Configure bench
+              <span>Configure bench</span>
+              <span aria-hidden="true" className="button-arrow" />
             </button>
           </div>
         </div>
@@ -691,6 +782,9 @@ function renderPage(props: PageRendererProps) {
           selectedSiteId={props.selectedSiteId}
           running={props.running}
           terminalLog={props.terminalLog}
+          terminalCommandInput={props.terminalCommandInput}
+          ownerCommandInput={props.ownerCommandInput}
+          ownerTerminalToken={props.ownerTerminalToken}
           terminalAction={props.terminalAction}
           terminalSiteName={props.terminalSiteName}
           terminalRunning={props.terminalRunning}
@@ -698,6 +792,12 @@ function renderPage(props: PageRendererProps) {
           onSelectModule={props.onSelectModule}
           onAutomate={props.onAutomate}
           onStartBench={props.onStartBench}
+          onTerminalCommandInput={props.onTerminalCommandInput}
+          onOwnerCommandInput={props.onOwnerCommandInput}
+          onOwnerTerminalToken={props.onOwnerTerminalToken}
+          onManualTerminalCommand={props.onManualTerminalCommand}
+          onOwnerOsCommand={props.onOwnerOsCommand}
+          onDiagnoseIssue={props.onDiagnoseIssue}
           onTerminalAction={props.onTerminalAction}
           onTerminalSiteName={props.onTerminalSiteName}
           onRunTerminalCommand={props.onRunTerminalCommand}
@@ -772,15 +872,25 @@ function ModulesPage({
                   <small>{moduleItem.status}</small>
                 </button>
                 <div className="module-actions">
-                  <a href={moduleItem.link_url} target="_blank" rel="noreferrer">
-                    Open in Frappe
+                  <a
+                    className="circle-action"
+                    href={moduleItem.link_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`Open ${moduleItem.title} in Frappe`}
+                    title={`Open ${moduleItem.title} in Frappe`}
+                  >
+                    <span aria-hidden="true" className="arrow-glyph" />
                   </a>
                   <button
                     type="button"
+                    className="circle-action"
                     disabled={running}
                     onClick={() => onAutomate(moduleItem)}
+                    aria-label={`Automate ${moduleItem.title}`}
+                    title={`Automate ${moduleItem.title}`}
                   >
-                    Automate
+                    <span aria-hidden="true" className={running ? "loading-glyph" : "arrow-glyph"} />
                   </button>
                 </div>
               </article>
@@ -983,15 +1093,28 @@ function SetupPage({
               </small>
               <code>{app.install_command}</code>
               <div className="module-actions">
-                <a href={app.desk_url} target="_blank" rel="noreferrer">
-                  Open
+                <a
+                  className="circle-action"
+                  href={app.desk_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`Open ${app.name} in Frappe`}
+                  title={`Open ${app.name} in Frappe`}
+                >
+                  <span aria-hidden="true" className="arrow-glyph" />
                 </a>
                 <button
                   type="button"
+                  className="circle-action"
                   disabled={Boolean(installingKey)}
                   onClick={() => onInstallApp(app)}
+                  aria-label={app.installed ? `Install ${app.name} on site` : `Install ${app.name}`}
+                  title={app.installed ? `Install ${app.name} on site` : `Install ${app.name}`}
                 >
-                  {installingKey === app.key ? "Running" : app.installed ? "Install on site" : "Install"}
+                  <span
+                    aria-hidden="true"
+                    className={installingKey === app.key ? "loading-glyph" : "arrow-glyph"}
+                  />
                 </button>
               </div>
             </article>
@@ -1068,6 +1191,9 @@ function TerminalPage({
   selectedSiteId,
   running,
   terminalLog,
+  terminalCommandInput,
+  ownerCommandInput,
+  ownerTerminalToken,
   terminalAction,
   terminalSiteName,
   terminalRunning,
@@ -1075,6 +1201,12 @@ function TerminalPage({
   onSelectModule,
   onAutomate,
   onStartBench,
+  onTerminalCommandInput,
+  onOwnerCommandInput,
+  onOwnerTerminalToken,
+  onManualTerminalCommand,
+  onOwnerOsCommand,
+  onDiagnoseIssue,
   onTerminalAction,
   onTerminalSiteName,
   onRunTerminalCommand,
@@ -1088,6 +1220,9 @@ function TerminalPage({
   selectedSiteId: number | null;
   running: boolean;
   terminalLog: string[];
+  terminalCommandInput: string;
+  ownerCommandInput: string;
+  ownerTerminalToken: string;
   terminalAction: TerminalCommandAction;
   terminalSiteName: string;
   terminalRunning: boolean;
@@ -1095,6 +1230,12 @@ function TerminalPage({
   onSelectModule: (moduleKey: string) => void;
   onAutomate: (moduleItem: FrappeModule) => void;
   onStartBench: () => void;
+  onTerminalCommandInput: (value: string) => void;
+  onOwnerCommandInput: (value: string) => void;
+  onOwnerTerminalToken: (value: string) => void;
+  onManualTerminalCommand: () => void;
+  onOwnerOsCommand: () => void;
+  onDiagnoseIssue: () => void;
   onTerminalAction: (action: TerminalCommandAction) => void;
   onTerminalSiteName: (siteName: string) => void;
   onRunTerminalCommand: () => void;
@@ -1192,6 +1333,99 @@ function TerminalPage({
           <div className="terminal-runner">
             <p className="eyebrow">OS Terminal Bridge</p>
             <label className="control-field">
+              <span>Manual bench command</span>
+              <input
+                list="bench-command-suggestions"
+                value={terminalCommandInput}
+                onChange={(event) => onTerminalCommandInput(event.target.value)}
+                placeholder="bench --version"
+              />
+              <datalist id="bench-command-suggestions">
+                {benchCommandSuggestions(terminalSiteName).map((suggestion) => (
+                  <option value={suggestion} key={suggestion} />
+                ))}
+              </datalist>
+            </label>
+            <div className="command-suggestion-grid" aria-label="Command suggestions">
+              {benchCommandSuggestions(terminalSiteName).map((suggestion) => (
+                <button
+                  type="button"
+                  onClick={() => onTerminalCommandInput(suggestion)}
+                  key={suggestion}
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="run-button"
+              disabled={terminalRunning || !terminalCommandInput.trim()}
+              onClick={onManualTerminalCommand}
+            >
+              {terminalRunning ? "Running command" : "Run typed command"}
+            </button>
+            <p className="privacy-note">
+              Manual input is still protected: only allowlisted `bench`
+              commands run, and shell operators are blocked.
+            </p>
+
+            <label className="control-field">
+              <span>Owner OS command</span>
+              <input
+                list="owner-command-suggestions"
+                value={ownerCommandInput}
+                onChange={(event) => onOwnerCommandInput(event.target.value)}
+                placeholder="pwd"
+              />
+              <datalist id="owner-command-suggestions">
+                {ownerCommandSuggestions().map((suggestion) => (
+                  <option value={suggestion} key={suggestion} />
+                ))}
+              </datalist>
+            </label>
+            <label className="control-field">
+              <span>Owner token</span>
+              <input
+                type="password"
+                value={ownerTerminalToken}
+                onChange={(event) => onOwnerTerminalToken(event.target.value)}
+                placeholder="DOPPIO_TERMINAL_TOKEN"
+              />
+            </label>
+            <div className="command-suggestion-grid" aria-label="Owner command suggestions">
+              {ownerCommandSuggestions().map((suggestion) => (
+                <button
+                  type="button"
+                  onClick={() => onOwnerCommandInput(suggestion)}
+                  key={suggestion}
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="run-button"
+              disabled={terminalRunning || !ownerCommandInput.trim()}
+              onClick={onOwnerOsCommand}
+            >
+              {terminalRunning ? "Running OS command" : "Run owner OS command"}
+            </button>
+            <button
+              type="button"
+              className="ghost-button"
+              disabled={terminalRunning}
+              onClick={onDiagnoseIssue}
+            >
+              Diagnose issue
+            </button>
+            <p className="privacy-note">
+              Owner OS command mode requires `DOPPIO_TERMINAL_TOKEN` in the backend `.env`.
+              It runs without shell expansion and blocks dangerous executables.
+            </p>
+
+            <label className="control-field">
               <span>Terminal action</span>
               <select
                 value={terminalAction}
@@ -1261,6 +1495,37 @@ function TerminalPage({
 
 function terminalActionRequiresSite(action: TerminalCommandAction) {
   return action === "bench-list-apps" || action === "bench-migrate" || action === "bench-clear-cache";
+}
+
+function benchCommandSuggestions(siteName: string) {
+  const site = siteName || "demo";
+
+  return [
+    "bench --version",
+    "bench list-sites",
+    "bench start",
+    "bench doctor",
+    `bench --site ${site} list-apps`,
+    `bench --site ${site} migrate`,
+    `bench --site ${site} clear-cache`,
+    `bench --site ${site} clear-website-cache`,
+    `bench --site ${site} install-app erpnext`,
+  ];
+}
+
+function ownerCommandSuggestions() {
+  return [
+    "pwd",
+    "ls -la",
+    "ps -ef",
+    "node --version",
+    "npm --version",
+    "npm run lint",
+    "npm run build",
+    "./env/bin/python -m compileall backend/app",
+    "bench --version",
+    "bench list-sites",
+  ];
 }
 
 function loadTheme(): ThemeMode {

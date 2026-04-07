@@ -17,6 +17,7 @@ class Settings:
   frappe_timeout_seconds: float
   bench_path: str
   bench_command_timeout_seconds: int
+  terminal_token: str
 
 
 @lru_cache
@@ -35,4 +36,5 @@ def get_settings() -> Settings:
     frappe_timeout_seconds=float(os.getenv("FRAPPE_TIMEOUT_SECONDS", "15")),
     bench_path=os.getenv("BENCH_PATH", "/home/jenish/frappe16/frappe-bench16"),
     bench_command_timeout_seconds=int(os.getenv("BENCH_COMMAND_TIMEOUT_SECONDS", "900")),
+    terminal_token=os.getenv("DOPPIO_TERMINAL_TOKEN", ""),
   )

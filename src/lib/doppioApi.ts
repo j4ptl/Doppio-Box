@@ -141,6 +141,15 @@ export type TerminalCommandRequest = {
   site_name: string;
 };
 
+export type TerminalManualCommandRequest = {
+  command: string;
+};
+
+export type TerminalOsCommandRequest = {
+  command: string;
+  token: string;
+};
+
 export type NetworkInterface = {
   name: string;
   address: string;
@@ -392,6 +401,50 @@ export async function runTerminalCommand(
 
   if (!response.ok) {
     throw new Error(`Terminal command failed with status ${response.status}`);
+  }
+
+  return (await response.json()) as BenchCommandResult;
+}
+
+export async function runManualTerminalCommand(
+  payload: TerminalManualCommandRequest
+): Promise<BenchCommandResult> {
+  const response = await fetch(apiUrl("/api/terminal/manual"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Manual terminal command failed with status ${response.status}`);
+  }
+
+  return (await response.json()) as BenchCommandResult;
+}
+
+export async function runOwnerOsTerminalCommand(
+  payload: TerminalOsCommandRequest
+): Promise<BenchCommandResult> {
+  const response = await fetch(apiUrl("/api/terminal/os"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Owner OS terminal command failed with status ${response.status}`);
+  }
+
+  return (await response.json()) as BenchCommandResult;
+}
+
+export async function runTerminalDiagnostics(): Promise<BenchCommandResult> {
+  const response = await fetch(apiUrl("/api/terminal/diagnose"), {
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Terminal diagnostics failed with status ${response.status}`);
   }
 
   return (await response.json()) as BenchCommandResult;

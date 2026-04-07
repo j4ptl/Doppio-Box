@@ -1,0 +1,268 @@
+00:02:29 system        | redis_cache.1 started (pid=1247269)
+00:02:29 system        | redis_queue.1 started (pid=1247273)
+00:02:29 system        | web.1 started (pid=1247274)
+00:02:29 system        | socketio.1 started (pid=1247280)
+00:02:29 system        | watch.1 started (pid=1247284)
+00:02:29 redis_cache.1 | 1247272:C 08 Apr 2026 00:02:29.629 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+00:02:29 redis_cache.1 | 1247272:C 08 Apr 2026 00:02:29.629 * Redis version=7.4.7, bits=64, commit=00000000, modified=0, pid=1247272, just started
+00:02:29 redis_cache.1 | 1247272:C 08 Apr 2026 00:02:29.629 * Configuration loaded
+00:02:29 redis_queue.1 | 1247277:C 08 Apr 2026 00:02:29.629 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+00:02:29 redis_queue.1 | 1247277:C 08 Apr 2026 00:02:29.629 * Redis version=7.4.7, bits=64, commit=00000000, modified=0, pid=1247277, just started
+00:02:29 redis_queue.1 | 1247277:C 08 Apr 2026 00:02:29.629 * Configuration loaded
+00:02:29 redis_queue.1 | 1247277:M 08 Apr 2026 00:02:29.630 * monotonic clock: POSIX clock_gettime
+00:02:29 redis_cache.1 | 1247272:M 08 Apr 2026 00:02:29.630 * monotonic clock: POSIX clock_gettime
+00:02:29 system        | schedule.1 started (pid=1247288)
+00:02:29 redis_queue.1 | 1247277:M 08 Apr 2026 00:02:29.631 * Running mode=standalone, port=13001.
+00:02:29 redis_cache.1 | 1247272:M 08 Apr 2026 00:02:29.632 * Running mode=standalone, port=13000.
+00:02:29 redis_cache.1 | 1247272:M 08 Apr 2026 00:02:29.632 * Server initialized
+00:02:29 redis_cache.1 | 1247272:M 08 Apr 2026 00:02:29.632 * Ready to accept connections tcp
+00:02:29 redis_queue.1 | 1247277:M 08 Apr 2026 00:02:29.632 * Server initialized
+00:02:29 redis_queue.1 | 1247277:M 08 Apr 2026 00:02:29.632 * Loading RDB produced by version 7.4.7
+00:02:29 redis_queue.1 | 1247277:M 08 Apr 2026 00:02:29.632 * RDB age 21 seconds
+00:02:29 redis_queue.1 | 1247277:M 08 Apr 2026 00:02:29.632 * RDB memory usage when created 1.40 Mb
+00:02:29 redis_queue.1 | 1247277:M 08 Apr 2026 00:02:29.632 * Done loading RDB, keys loaded: 8, keys expired: 0.
+00:02:29 redis_queue.1 | 1247277:M 08 Apr 2026 00:02:29.632 * DB loaded from disk: 0.000 seconds
+00:02:29 redis_queue.1 | 1247277:M 08 Apr 2026 00:02:29.632 * Ready to accept connections tcp
+00:02:29 system        | worker.1 started (pid=1247291)
+00:02:29 socketio.1    | Realtime service listening on: ws://0.0.0.0:9000
+00:02:31 watch.1       | 
+00:02:31 watch.1       | yarn run v1.22.22
+00:02:31 watch.1       | $ node esbuild --watch --live-reload
+00:02:31 web.1         | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+00:02:31 web.1         |  * Running on all addresses (0.0.0.0)
+00:02:31 web.1         |  * Running on http://127.0.0.1:8000
+00:02:31 web.1         |  * Running on http://10.128.188.245:8000
+00:02:31 web.1         | [33mPress CTRL+C to quit[0m
+00:02:31 web.1         |  * Restarting with watchdog (inotify)
+00:02:32 watch.1       | Browserslist: caniuse-lite is outdated. Please run:
+00:02:32 watch.1       |   npx update-browserslist-db@latest
+00:02:32 watch.1       |   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+00:02:32 web.1         |  * Debugger is active!
+00:02:32 web.1         |  * Debugger PIN: 848-116-450
+00:02:41 web.1         | 127.0.0.1 - - [08/Apr/2026 00:02:41] "GET /api/method/frappe.auth.get_logged_user HTTP/1.1" 200 -
+00:02:41 web.1         | 127.0.0.1 - - [08/Apr/2026 00:02:41] "GET /api/method/frappe.auth.get_logged_user HTTP/1.1" 200 -
+00:02:41 web.1         | 127.0.0.1 - - [08/Apr/2026 00:02:41] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:02:41 web.1         | 127.0.0.1 - - [08/Apr/2026 00:02:41] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:02:41 web.1         | 127.0.0.1 - - [08/Apr/2026 00:02:41] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:02:44 watch.1       | Watching for changes...
+00:03:33 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:33] "[32mGET /app/accounting HTTP/1.1[0m" 301 -
+00:03:35 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:35] "GET /desk/accounting HTTP/1.1" 200 -
+00:03:35 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:35] "GET /assets/frappe/dist/css/desk.bundle.B2KAMIJG.css HTTP/1.1" 200 -
+00:03:35 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:35] "GET /assets/frappe/dist/css/report.bundle.WORWKAKO.css HTTP/1.1" 200 -
+00:03:35 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:35] "GET /assets/frappe/icons/lucide/icons.svg?v=1775586764.3621564 HTTP/1.1" 200 -
+00:03:35 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:35] "GET /assets/frappe/icons/timeless/icons.svg?v=1775586764.3621564 HTTP/1.1" 200 -
+00:03:35 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:35] "GET /assets/frappe/icons/espresso/icons.svg?v=1775586764.3621564 HTTP/1.1" 200 -
+00:03:35 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:35] "GET /assets/erpnext/dist/css/erpnext.bundle.HK2LWITJ.css HTTP/1.1" 200 -
+00:03:35 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:35] "GET /assets/frappe/icons/desktop_icons/alphabets.svg?v=1775586764.3621564 HTTP/1.1" 200 -
+00:03:35 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:35] "GET /assets/erpnext/icons/pos-icons.svg?v=1775586764.3621564 HTTP/1.1" 200 -
+00:03:35 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:35] "GET /api/method/frappe.desk.doctype.notification_log.notification_log.get_notification_logs?limit=20&_=1775586815468 HTTP/1.1" 200 -
+00:03:35 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:35] "GET /api/method/frappe.desk.doctype.event.event.get_events?start=2026-04-08&end=2026-04-08&_=1775586815469 HTTP/1.1" 200 -
+00:03:35 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:35] "GET /api/method/frappe.realtime.get_user_info HTTP/1.1" 200 -
+00:03:36 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:36] "GET /api/method/frappe.desk.desktop.get_desktop_page?page={"name":"Accounting","title":"Accounting","public":1}&_=1775586815467 HTTP/1.1" 200 -
+00:03:36 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:36] "GET /api/method/frappe.desk.reportview.get_list?filters={"name":"Administrator"}&fields=["*"]&doctype=Dashboard%20Settings&limit=20&_=1775586815470 HTTP/1.1" 200 -
+00:03:36 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:36] "GET /api/method/frappe.desk.form.load.getdoc?doctype=Number%20Card&name=Total%20Outgoing%20Bills&_=1775586815472 HTTP/1.1" 200 -
+00:03:36 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:36] "GET /api/method/frappe.desk.form.load.getdoc?doctype=Dashboard%20Chart&name=Profit%20and%20Loss&_=1775586815471 HTTP/1.1" 200 -
+00:03:36 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:36] "GET /api/method/frappe.desk.form.load.getdoc?doctype=Number%20Card&name=Total%20Incoming%20Bills&_=1775586815473 HTTP/1.1" 200 -
+00:03:36 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:36] "GET /api/method/frappe.desk.form.load.getdoc?doctype=Number%20Card&name=Total%20Outgoing%20Payment&_=1775586815475 HTTP/1.1" 200 -
+00:03:36 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:36] "GET /api/method/frappe.desk.form.load.getdoc?doctype=Number%20Card&name=Total%20Incoming%20Payment&_=1775586815474 HTTP/1.1" 200 -
+00:03:36 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:36] "POST /api/method/frappe.desk.doctype.number_card.number_card.get_result HTTP/1.1" 200 -
+00:03:36 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:36] "POST /api/method/frappe.desk.doctype.number_card.number_card.get_result HTTP/1.1" 200 -
+00:03:36 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:36] "POST /api/method/frappe.desk.doctype.number_card.number_card.get_result HTTP/1.1" 200 -
+00:03:36 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:36] "POST /api/method/frappe.desk.doctype.number_card.number_card.get_result HTTP/1.1" 200 -
+00:03:36 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:36] "POST /api/method/frappe.desk.query_report.get_script HTTP/1.1" 200 -
+00:03:36 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:36] "POST /api/method/erpnext.accounts.doctype.accounting_dimension.accounting_dimension.get_dimensions HTTP/1.1" 200 -
+00:03:37 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:37] "GET /api/method/frappe.desk.form.load.getdoctype?doctype=Payment%20Entry&with_parent=1&_=1775586815476 HTTP/1.1" 200 -
+00:03:37 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:37] "GET /api/method/frappe.desk.form.load.getdoctype?doctype=Payment%20Entry&with_parent=1&_=1775586815477 HTTP/1.1" 200 -
+00:03:37 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:37] "POST /api/method/frappe.desk.doctype.number_card.number_card.get_percentage_difference HTTP/1.1" 200 -
+00:03:37 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:37] "POST /api/method/frappe.desk.doctype.number_card.number_card.get_percentage_difference HTTP/1.1" 200 -
+00:03:37 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:37] "GET /api/method/frappe.desk.form.load.getdoctype?doctype=Purchase%20Invoice&with_parent=1&_=1775586815479 HTTP/1.1" 200 -
+00:03:37 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:37] "GET /api/method/frappe.desk.form.load.getdoctype?doctype=Sales%20Invoice&with_parent=1&_=1775586815478 HTTP/1.1" 200 -
+00:03:37 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:37] "POST /api/method/frappe.desk.doctype.number_card.number_card.get_percentage_difference HTTP/1.1" 200 -
+00:03:37 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:37] "POST /api/method/frappe.desk.doctype.number_card.number_card.get_percentage_difference HTTP/1.1" 200 -
+00:03:37 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:37] "POST /api/method/frappe.desk.query_report.run HTTP/1.1" 200 -
+00:03:37 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:37] "GET /api/method/frappe.client.get_value?doctype=Report&fieldname=ref_doctype&filters=Profit%20and%20Loss%20Statement&_=1775586815481 HTTP/1.1" 200 -
+00:03:37 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:37] "GET /api/method/frappe.client.get?doctype=Dashboard%20Chart&name=Profit%20and%20Loss&_=1775586815480 HTTP/1.1" 200 -
+00:03:45 web.1         | 127.0.0.1 - - [08/Apr/2026 00:03:45] "POST /api/method/frappe.desk.doctype.route_history.route_history.deferred_insert HTTP/1.1" 200 -
+00:08:56 web.1         | 127.0.0.1 - - [08/Apr/2026 00:08:56] "GET /api/method/frappe.auth.get_logged_user HTTP/1.1" 200 -
+00:08:56 web.1         | 127.0.0.1 - - [08/Apr/2026 00:08:56] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:08:56 web.1         | 127.0.0.1 - - [08/Apr/2026 00:08:56] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:09:49 web.1         | 127.0.0.1 - - [08/Apr/2026 00:09:49] "GET /api/method/frappe.auth.get_logged_user HTTP/1.1" 200 -
+00:09:49 web.1         | 127.0.0.1 - - [08/Apr/2026 00:09:49] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:09:49 web.1         | 127.0.0.1 - - [08/Apr/2026 00:09:49] "GET /api/method/frappe.auth.get_logged_user HTTP/1.1" 200 -
+00:09:49 web.1         | 127.0.0.1 - - [08/Apr/2026 00:09:49] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:09:50 web.1         | 127.0.0.1 - - [08/Apr/2026 00:09:50] "GET /api/method/frappe.realtime.get_user_info HTTP/1.1" 200 -
+00:28:08 system        | redis_cache.1 started (pid=25027)
+00:28:08 system        | redis_queue.1 started (pid=25030)
+00:28:08 system        | web.1 started (pid=25031)
+00:28:08 system        | socketio.1 started (pid=25038)
+00:28:08 system        | watch.1 started (pid=25042)
+00:28:08 system        | schedule.1 started (pid=25046)
+00:28:08 system        | worker.1 started (pid=25049)
+00:28:08 redis_cache.1 | 25035:C 08 Apr 2026 00:28:08.899 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+00:28:08 redis_cache.1 | 25035:C 08 Apr 2026 00:28:08.899 * Redis version=7.4.7, bits=64, commit=00000000, modified=0, pid=25035, just started
+00:28:08 redis_cache.1 | 25035:C 08 Apr 2026 00:28:08.899 * Configuration loaded
+00:28:08 redis_queue.1 | 25036:C 08 Apr 2026 00:28:08.899 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+00:28:08 redis_queue.1 | 25036:C 08 Apr 2026 00:28:08.899 * Redis version=7.4.7, bits=64, commit=00000000, modified=0, pid=25036, just started
+00:28:08 redis_queue.1 | 25036:C 08 Apr 2026 00:28:08.899 * Configuration loaded
+00:28:08 redis_cache.1 | 25035:M 08 Apr 2026 00:28:08.900 * monotonic clock: POSIX clock_gettime
+00:28:08 redis_queue.1 | 25036:M 08 Apr 2026 00:28:08.900 * monotonic clock: POSIX clock_gettime
+00:28:08 redis_cache.1 | 25035:M 08 Apr 2026 00:28:08.901 * Running mode=standalone, port=13000.
+00:28:08 redis_queue.1 | 25036:M 08 Apr 2026 00:28:08.901 * Running mode=standalone, port=13001.
+00:28:08 redis_cache.1 | 25035:M 08 Apr 2026 00:28:08.901 * Server initialized
+00:28:08 redis_queue.1 | 25036:M 08 Apr 2026 00:28:08.902 * Server initialized
+00:28:08 redis_cache.1 | 25035:M 08 Apr 2026 00:28:08.902 * Ready to accept connections tcp
+00:28:08 redis_queue.1 | 25036:M 08 Apr 2026 00:28:08.902 * Loading RDB produced by version 7.4.7
+00:28:08 redis_queue.1 | 25036:M 08 Apr 2026 00:28:08.902 * RDB age 1560 seconds
+00:28:08 redis_queue.1 | 25036:M 08 Apr 2026 00:28:08.902 * RDB memory usage when created 1.40 Mb
+00:28:08 redis_queue.1 | 25036:M 08 Apr 2026 00:28:08.902 * Done loading RDB, keys loaded: 7, keys expired: 1.
+00:28:08 redis_queue.1 | 25036:M 08 Apr 2026 00:28:08.902 * DB loaded from disk: 0.001 seconds
+00:28:08 redis_queue.1 | 25036:M 08 Apr 2026 00:28:08.902 * Ready to accept connections tcp
+00:28:09 socketio.1    | Realtime service listening on: ws://0.0.0.0:9000
+00:28:10 watch.1       | 
+00:28:10 watch.1       | yarn run v1.22.22
+00:28:10 watch.1       | $ node esbuild --watch --live-reload
+00:28:10 web.1         | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+00:28:10 web.1         |  * Running on all addresses (0.0.0.0)
+00:28:10 web.1         |  * Running on http://127.0.0.1:8000
+00:28:10 web.1         |  * Running on http://10.128.188.245:8000
+00:28:10 web.1         | [33mPress CTRL+C to quit[0m
+00:28:10 web.1         |  * Restarting with watchdog (inotify)
+00:28:12 web.1         |  * Debugger is active!
+00:28:12 web.1         |  * Debugger PIN: 637-614-429
+00:28:12 watch.1       | Browserslist: caniuse-lite is outdated. Please run:
+00:28:12 watch.1       |   npx update-browserslist-db@latest
+00:28:12 watch.1       |   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+00:28:24 watch.1       | Watching for changes...
+00:28:40 web.1         | 127.0.0.1 - - [08/Apr/2026 00:28:40] "HEAD / HTTP/1.1" 200 -
+00:30:45 web.1         | 127.0.0.1 - - [08/Apr/2026 00:30:45] "HEAD / HTTP/1.1" 200 -
+00:31:22 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:22] "GET / HTTP/1.1" 200 -
+00:31:22 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:22] "GET /assets/frappe/dist/css/website.bundle.6YHTOAFD.css HTTP/1.1" 200 -
+00:31:22 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:22] "GET /assets/frappe/icons/timeless/icons.svg?v=1775588304.9005504 HTTP/1.1" 200 -
+00:31:22 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:22] "GET /assets/erpnext/dist/css/erpnext-web.bundle.D3PYAGE3.css HTTP/1.1" 200 -
+00:31:22 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:22] "GET /assets/frappe/icons/lucide/icons.svg?v=1775588304.9005504 HTTP/1.1" 200 -
+00:31:22 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:22] "GET /assets/frappe/icons/espresso/icons.svg?v=1775588304.9005504 HTTP/1.1" 200 -
+00:31:22 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:22] "GET /assets/frappe/dist/css/login.bundle.VZR6HK3A.css HTTP/1.1" 200 -
+00:31:22 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:22] "GET /assets/erpnext/images/erpnext-logo.svg HTTP/1.1" 200 -
+00:31:22 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:22] "GET /assets/erpnext/icons/pos-icons.svg?v=1775588304.9005504 HTTP/1.1" 200 -
+00:31:22 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:22] "GET /website_script.js HTTP/1.1" 200 -
+00:31:37 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:37] "POST /login HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /desk HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/frappe/dist/css/desk.bundle.PVC225GG.css HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/frappe/dist/css/report.bundle.BZMTG6RY.css HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/frappe/dist/js/desk.bundle.TFYOIGPP.js HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/erpnext/dist/css/erpnext.bundle.NMT7KDUK.css HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/frappe/dist/js/libs.bundle.TCCLKT27.js HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/frappe/dist/js/billing.bundle.4IQZPWD6.js HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/frappe/dist/js/list.bundle.EPD5GUBZ.js HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/frappe/dist/js/controls.bundle.VQXVZIYG.js HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/frappe/dist/js/form.bundle.XVXTWEAH.js HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/frappe/dist/js/report.bundle.D6TFEVYX.js HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/frappe/dist/js/telemetry.bundle.DQEBDMFO.js HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/erpnext/dist/js/erpnext.bundle.7EPPGRKK.js HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/frappe/icons/desktop_icons/alphabets.svg?v=1775588304.9005504 HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/frappe/sounds/cancel.mp3 HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/frappe/sounds/error.mp3 HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/frappe/sounds/click.mp3 HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/frappe/sounds/delete.mp3 HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/frappe/sounds/submit.mp3 HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/frappe/sounds/email.mp3 HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/frappe/sounds/alert.mp3 HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/erpnext/sounds/numpad-touch.mp3 HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/erpnext/sounds/incoming-call.mp3 HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/erpnext/sounds/call-disconnect.mp3 HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/frappe/dist/js/build_events.bundle.AYGYYHBU.js HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "POST /api/method/frappe.desk.desk_page.getpage HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /api/method/frappe.desk.doctype.notification_log.notification_log.get_notification_logs?limit=20&_=1775588498416 HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /api/method/frappe.desk.doctype.event.event.get_events?start=2026-04-08&end=2026-04-08&_=1775588498417 HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /api/method/frappe.realtime.get_user_info HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /api/method/frappe.desk.doctype.notification_log.notification_log.get_notification_logs?limit=20&_=1775588498418 HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /api/method/frappe.desk.doctype.event.event.get_events?start=2026-04-08&end=2026-04-08&_=1775588498419 HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/erpnext/icons/desktop_icons/solid/accounting.svg HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/frappe/images/ui-states/notification-empty-state.svg HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/erpnext/icons/desktop_icons/solid/taxes.svg HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/frappe/images/frappe-framework-logo.svg HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/erpnext/icons/desktop_icons/solid/budget.svg HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/erpnext/icons/desktop_icons/solid/financial_reports.svg HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/erpnext/icons/desktop_icons/solid/selling.svg HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/erpnext/icons/desktop_icons/solid/manufacturing.svg HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/erpnext/icons/desktop_icons/solid/assets.svg HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/erpnext/icons/desktop_icons/solid/projects.svg HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/erpnext/icons/desktop_icons/solid/quality.svg HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/erpnext/icons/desktop_icons/solid/buying.svg HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/erpnext/icons/desktop_icons/solid/erpnext_settings.svg HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/erpnext/icons/desktop_icons/solid/share_management.svg HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/erpnext/icons/desktop_icons/solid/banking.svg HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/erpnext/icons/desktop_icons/solid/stock.svg HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/erpnext/icons/desktop_icons/solid/subcontracting.svg HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/erpnext/icons/desktop_icons/solid/subscription.svg HTTP/1.1" 200 -
+00:31:38 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:38] "GET /assets/frappe/images/ui-states/event-empty-state.svg HTTP/1.1" 200 -
+00:31:44 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:44] "GET /desk HTTP/1.1" 200 -
+00:31:44 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:44] "POST /api/method/frappe.desk.desk_page.getpage HTTP/1.1" 200 -
+00:31:44 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:44] "GET /api/method/frappe.realtime.get_user_info HTTP/1.1" 200 -
+00:31:44 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:44] "GET /api/method/frappe.desk.doctype.event.event.get_events?start=2026-04-08&end=2026-04-08&_=1775588504453 HTTP/1.1" 200 -
+00:31:44 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:44] "GET /api/method/frappe.desk.doctype.notification_log.notification_log.get_notification_logs?limit=20&_=1775588504452 HTTP/1.1" 200 -
+00:31:44 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:44] "GET /api/method/frappe.desk.doctype.notification_log.notification_log.get_notification_logs?limit=20&_=1775588504454 HTTP/1.1" 200 -
+00:31:44 web.1         | 127.0.0.1 - - [08/Apr/2026 00:31:44] "GET /api/method/frappe.desk.doctype.event.event.get_events?start=2026-04-08&end=2026-04-08&_=1775588504455 HTTP/1.1" 200 -
+00:32:59 web.1         | 127.0.0.1 - - [08/Apr/2026 00:32:59] "HEAD / HTTP/1.1" 200 -
+00:33:43 web.1         | 127.0.0.1 - - [08/Apr/2026 00:33:43] "GET /api/method/frappe.auth.get_logged_user HTTP/1.1" 200 -
+00:33:43 web.1         | 127.0.0.1 - - [08/Apr/2026 00:33:43] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:33:52 web.1         | 127.0.0.1 - - [08/Apr/2026 00:33:52] "GET /api/method/frappe.auth.get_logged_user HTTP/1.1" 200 -
+00:33:52 web.1         | 127.0.0.1 - - [08/Apr/2026 00:33:52] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:33:52 web.1         | 127.0.0.1 - - [08/Apr/2026 00:33:52] "GET /api/method/frappe.auth.get_logged_user HTTP/1.1" 200 -
+00:33:52 web.1         | 127.0.0.1 - - [08/Apr/2026 00:33:52] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:33:52 web.1         | 127.0.0.1 - - [08/Apr/2026 00:33:52] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:33:56 web.1         | 127.0.0.1 - - [08/Apr/2026 00:33:56] "GET /api/method/frappe.auth.get_logged_user HTTP/1.1" 200 -
+00:33:56 web.1         | 127.0.0.1 - - [08/Apr/2026 00:33:56] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:33:56 web.1         | 127.0.0.1 - - [08/Apr/2026 00:33:56] "GET /api/method/frappe.auth.get_logged_user HTTP/1.1" 200 -
+00:33:56 web.1         | 127.0.0.1 - - [08/Apr/2026 00:33:56] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:33:56 web.1         | 127.0.0.1 - - [08/Apr/2026 00:33:56] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:34:35 web.1         | 127.0.0.1 - - [08/Apr/2026 00:34:35] "GET /api/resource/DocType?fields=["name",+"module"]&limit_page_length=500&filters=[["module",+"%3D",+"Accounts"]] HTTP/1.1" 200 -
+00:42:52 web.1         | 127.0.0.1 - - [08/Apr/2026 00:42:52] "GET /api/method/frappe.auth.get_logged_user HTTP/1.1" 200 -
+00:42:52 web.1         | 127.0.0.1 - - [08/Apr/2026 00:42:52] "GET /api/method/frappe.auth.get_logged_user HTTP/1.1" 200 -
+00:42:52 web.1         | 127.0.0.1 - - [08/Apr/2026 00:42:52] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:42:52 web.1         | 127.0.0.1 - - [08/Apr/2026 00:42:52] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:42:53 web.1         | 127.0.0.1 - - [08/Apr/2026 00:42:53] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:43:20 web.1         | 127.0.0.1 - - [08/Apr/2026 00:43:20] "[32mGET /app/home HTTP/1.1[0m" 301 -
+00:43:20 web.1         | 127.0.0.1 - - [08/Apr/2026 00:43:20] "GET /desk/home HTTP/1.1" 200 -
+00:43:20 web.1         | 127.0.0.1 - - [08/Apr/2026 00:43:20] "GET /api/method/frappe.desk.doctype.event.event.get_events?start=2026-04-08&end=2026-04-08&_=1775589200653 HTTP/1.1" 200 -
+00:43:20 web.1         | 127.0.0.1 - - [08/Apr/2026 00:43:20] "GET /api/method/frappe.desk.doctype.notification_log.notification_log.get_notification_logs?limit=20&_=1775589200652 HTTP/1.1" 200 -
+00:43:20 web.1         | 127.0.0.1 - - [08/Apr/2026 00:43:20] "GET /api/method/frappe.realtime.get_user_info HTTP/1.1" 200 -
+00:43:21 web.1         | 127.0.0.1 - - [08/Apr/2026 00:43:21] "GET /api/method/frappe.desk.desktop.get_desktop_page?page={"name":"Home","title":"Home","public":1}&_=1775589200651 HTTP/1.1" 200 -
+00:43:21 web.1         | 127.0.0.1 - - [08/Apr/2026 00:43:21] "POST /api/method/frappe.desk.reportview.get_count HTTP/1.1" 200 -
+00:43:21 web.1         | 127.0.0.1 - - [08/Apr/2026 00:43:21] "POST /api/method/frappe.desk.reportview.get_count HTTP/1.1" 200 -
+00:43:21 web.1         | 127.0.0.1 - - [08/Apr/2026 00:43:21] "POST /api/method/frappe.desk.reportview.get_count HTTP/1.1" 200 -
+00:43:21 web.1         | 127.0.0.1 - - [08/Apr/2026 00:43:21] "POST /api/method/frappe.desk.reportview.get_count HTTP/1.1" 200 -
+00:43:49 redis_queue.1 | 25036:M 08 Apr 2026 00:43:49.480 * 100 changes in 300 seconds. Saving...
+00:43:49 redis_queue.1 | 25036:M 08 Apr 2026 00:43:49.481 * Background saving started by pid 43021
+00:43:49 redis_queue.1 | 43021:C 08 Apr 2026 00:43:49.487 * DB saved on disk
+00:43:49 redis_queue.1 | 43021:C 08 Apr 2026 00:43:49.488 * Fork CoW for RDB: current 0 MB, peak 0 MB, average 0 MB
+00:43:49 redis_queue.1 | 25036:M 08 Apr 2026 00:43:49.582 * Background saving terminated with success
+00:44:33 web.1         | 127.0.0.1 - - [08/Apr/2026 00:44:33] "GET /api/method/frappe.auth.get_logged_user HTTP/1.1" 200 -
+00:44:33 web.1         | 127.0.0.1 - - [08/Apr/2026 00:44:33] "GET /api/method/frappe.auth.get_logged_user HTTP/1.1" 200 -
+00:44:33 web.1         | 127.0.0.1 - - [08/Apr/2026 00:44:33] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:44:33 web.1         | 127.0.0.1 - - [08/Apr/2026 00:44:33] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:44:33 web.1         | 127.0.0.1 - - [08/Apr/2026 00:44:33] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:48:32 web.1         | 127.0.0.1 - - [08/Apr/2026 00:48:32] "GET /api/method/frappe.auth.get_logged_user HTTP/1.1" 200 -
+00:48:32 web.1         | 127.0.0.1 - - [08/Apr/2026 00:48:32] "GET /api/method/frappe.auth.get_logged_user HTTP/1.1" 200 -
+00:48:32 web.1         | 127.0.0.1 - - [08/Apr/2026 00:48:32] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:48:32 web.1         | 127.0.0.1 - - [08/Apr/2026 00:48:32] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:48:32 web.1         | 127.0.0.1 - - [08/Apr/2026 00:48:32] "GET /api/resource/Workspace?fields=["name",+"title",+"module"]&limit_page_length=100 HTTP/1.1" 200 -
+00:48:44 web.1         | 127.0.0.1 - - [08/Apr/2026 00:48:44] "[32mGET /app/home HTTP/1.1[0m" 301 -
+00:48:45 web.1         | 127.0.0.1 - - [08/Apr/2026 00:48:45] "GET /desk/home HTTP/1.1" 200 -
+00:48:45 web.1         | 127.0.0.1 - - [08/Apr/2026 00:48:45] "GET /api/method/frappe.desk.doctype.event.event.get_events?start=2026-04-08&end=2026-04-08&_=1775589525827 HTTP/1.1" 200 -
+00:48:45 web.1         | 127.0.0.1 - - [08/Apr/2026 00:48:45] "GET /api/method/frappe.desk.doctype.notification_log.notification_log.get_notification_logs?limit=20&_=1775589525826 HTTP/1.1" 200 -
+00:48:46 web.1         | 127.0.0.1 - - [08/Apr/2026 00:48:46] "GET /api/method/frappe.realtime.get_user_info HTTP/1.1" 200 -
+00:48:46 web.1         | 127.0.0.1 - - [08/Apr/2026 00:48:46] "GET /api/method/frappe.desk.desktop.get_desktop_page?page={"name":"Home","title":"Home","public":1}&_=1775589525825 HTTP/1.1" 200 -
+00:48:46 web.1         | 127.0.0.1 - - [08/Apr/2026 00:48:46] "POST /api/method/frappe.desk.reportview.get_count HTTP/1.1" 200 -
+00:48:46 web.1         | 127.0.0.1 - - [08/Apr/2026 00:48:46] "POST /api/method/frappe.desk.reportview.get_count HTTP/1.1" 200 -
+00:48:46 web.1         | 127.0.0.1 - - [08/Apr/2026 00:48:46] "POST /api/method/frappe.desk.reportview.get_count HTTP/1.1" 200 -
+00:48:46 web.1         | 127.0.0.1 - - [08/Apr/2026 00:48:46] "POST /api/method/frappe.desk.reportview.get_count HTTP/1.1" 200 -
+00:49:07 web.1         | 127.0.0.1 - - [08/Apr/2026 00:49:07] "GET /api/resource/DocType?fields=["name",+"module"]&limit_page_length=500&filters=[["module",+"%3D",+"Accounts"]] HTTP/1.1" 200 -
+00:49:13 web.1         | 127.0.0.1 - - [08/Apr/2026 00:49:13] "GET /api/resource/DocType?fields=["name",+"module"]&limit_page_length=500&filters=[["module",+"%3D",+"Accounts"]] HTTP/1.1" 200 -
+00:49:35 web.1         | 127.0.0.1 - - [08/Apr/2026 00:49:35] "GET /desk HTTP/1.1" 200 -
+00:49:36 web.1         | 127.0.0.1 - - [08/Apr/2026 00:49:36] "GET /api/method/frappe.realtime.get_user_info HTTP/1.1" 200 -
+00:49:36 web.1         | 127.0.0.1 - - [08/Apr/2026 00:49:36] "POST /api/method/frappe.desk.desk_page.getpage HTTP/1.1" 200 -
+00:49:36 web.1         | 127.0.0.1 - - [08/Apr/2026 00:49:36] "GET /api/method/frappe.desk.doctype.notification_log.notification_log.get_notification_logs?limit=20&_=1775589576085 HTTP/1.1" 200 -
+00:49:36 web.1         | 127.0.0.1 - - [08/Apr/2026 00:49:36] "GET /api/method/frappe.desk.doctype.event.event.get_events?start=2026-04-08&end=2026-04-08&_=1775589576086 HTTP/1.1" 200 -
+00:49:36 web.1         | 127.0.0.1 - - [08/Apr/2026 00:49:36] "GET /api/method/frappe.desk.doctype.event.event.get_events?start=2026-04-08&end=2026-04-08&_=1775589576088 HTTP/1.1" 200 -
+00:49:36 web.1         | 127.0.0.1 - - [08/Apr/2026 00:49:36] "GET /api/method/frappe.desk.doctype.notification_log.notification_log.get_notification_logs?limit=20&_=1775589576087 HTTP/1.1" 200 -

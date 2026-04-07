@@ -1,6 +1,8 @@
 import json
+import shlex
 import socket
 import subprocess
+import time
 from pathlib import Path
 
 from .schemas import (
@@ -221,11 +223,31 @@ class BenchManager:
         command=["bench", "start"],
       )
 
+    for _ in range(16):
+      if self.bench_process.poll() is not None:
+        return BenchCommandOut(
+          status="failed",
+          message="Frappe Bench start exited before the web server became reachable.",
+          command=["bench", "start"],
+          output=_tail_file(log_path),
+        )
+
+      if _port_is_open("127.0.0.1", webserver_port):
+        return BenchCommandOut(
+          status="completed",
+          message="Frappe Bench started and is reachable.",
+          command=["bench", "start"],
+          output=_tail_file(log_path),
+        )
+
+      time.sleep(0.5)
+
     return BenchCommandOut(
       status="running",
       message="Frappe Bench start command launched.",
       command=["bench", "start"],
-      output="Bench is starting in the background. Open Frappe after a few seconds at http://localhost:8000.",
+      output=_tail_file(log_path)
+      or "Bench is starting in the background. Open Frappe after a few seconds at http://localhost:8000.",
     )
 
   def run_terminal_action(self, action: str, site_name: str = "") -> BenchCommandOut:
@@ -255,6 +277,151 @@ class BenchManager:
       raise ValueError(f"Unsupported terminal action: {action}")
 
     return self._run_commands([command])
+
+  def run_manual_terminal_command(self, raw_command: str) -> BenchCommandOut:
+    try:
+      command = shlex.split(raw_command)
+    except ValueError as exc:
+      return BenchCommandOut(
+        status="failed",
+        message=f"Could not parse command: {exc}",
+        command=[],
+      )
+
+    if not command:
+      return BenchCommandOut(
+        status="failed",
+        message="Enter a command before running the mini terminal.",
+        command=[],
+      )
+
+    if _has_shell_metacharacters(raw_command):
+      return BenchCommandOut(
+        status="failed",
+        message="Shell operators are blocked. Use a single allowlisted bench command without pipes, redirects, variables, or command chaining.",
+        command=[],
+      )
+
+    if command[0] != "bench":
+      return BenchCommandOut(
+        status="failed",
+        message="Only allowlisted bench commands can run from Doppio.",
+        command=[],
+      )
+
+    if command == ["bench", "start"]:
+      return self.start_bench()
+
+    if not self._manual_command_allowed(command):
+      return BenchCommandOut(
+        status="failed",
+        message="Command blocked. Use suggestions or the Create Site form for password-based site creation.",
+        command=_mask_command(command),
+      )
+
+    return self._run_commands([command])
+
+  def run_owner_os_command(self, raw_command: str, token: str, expected_token: str) -> BenchCommandOut:
+    if not expected_token:
+      return BenchCommandOut(
+        status="failed",
+        message="Owner OS terminal is disabled. Set DOPPIO_TERMINAL_TOKEN in .env and restart the backend.",
+        command=[],
+      )
+
+    if token != expected_token:
+      return BenchCommandOut(
+        status="failed",
+        message="Owner OS terminal token is invalid.",
+        command=[],
+      )
+
+    parsed = _parse_terminal_command(raw_command)
+
+    if isinstance(parsed, BenchCommandOut):
+      return parsed
+
+    command = parsed
+    blocked_reason = _blocked_os_command_reason(command)
+
+    if blocked_reason:
+      return BenchCommandOut(
+        status="failed",
+        message=blocked_reason,
+        command=_mask_command(command),
+      )
+
+    return self._run_command(command, Path.cwd(), min(self.timeout_seconds, 120))
+
+  def diagnose_system(self) -> BenchCommandOut:
+    commands = [
+      (["pwd"], Path.cwd()),
+      (["./env/bin/python", "--version"], Path.cwd()),
+      (["node", "--version"], Path.cwd()),
+      (["npm", "--version"], Path.cwd()),
+      (["bench", "--version"], self.bench_path),
+      (["bench", "list-sites"], self.bench_path),
+      (["curl", "-sS", "http://127.0.0.1:8001/health"], Path.cwd()),
+    ]
+    output_parts = []
+    last_command: list[str] = []
+
+    for command, cwd in commands:
+      last_command = command
+      result = self._run_command(command, cwd, 30)
+      output_parts.append(f"$ {' '.join(result.command)}")
+      output_parts.append(result.message)
+
+      if result.output:
+        output_parts.append(result.output.strip())
+
+    return BenchCommandOut(
+      status="completed",
+      message="Doppio diagnostics completed.",
+      command=last_command,
+      output="\n".join(part for part in output_parts if part),
+    )
+
+  def _manual_command_allowed(self, command: list[str]) -> bool:
+    simple_commands = {
+      ("bench", "--version"),
+      ("bench", "version"),
+      ("bench", "list-sites"),
+      ("bench", "doctor"),
+    }
+
+    if tuple(command) in simple_commands:
+      return True
+
+    if command[:2] == ["bench", "get-app"]:
+      return self._is_catalog_get_app_command(command)
+
+    if len(command) < 4 or command[1] != "--site" or not _safe_site_name(command[2]):
+      return False
+
+    site_command = command[3:]
+    site_command_name = site_command[0] if site_command else ""
+
+    if site_command in (["list-apps"], ["migrate"], ["clear-cache"], ["clear-website-cache"]):
+      return True
+
+    if site_command_name == "install-app" and len(site_command) == 2:
+      return _safe_identifier(site_command[1])
+
+    return False
+
+  def _is_catalog_get_app_command(self, command: list[str]) -> bool:
+    catalog_repos = {item["repo_url"] for item in APP_CATALOG}
+
+    if len(command) == 3:
+      return command[2] in catalog_repos
+
+    if len(command) == 5 and command[2] == "--branch":
+      branch = command[3]
+      repo = command[4]
+      return _safe_branch(branch) and repo in catalog_repos
+
+    return False
 
   def _catalog_item(self, app_key: str) -> dict[str, str]:
     for item in APP_CATALOG:
@@ -383,45 +550,59 @@ class BenchManager:
 
     for command in commands:
       last_command = command
-      try:
-        completed = subprocess.run(
-          command,
-          cwd=self.bench_path,
-          check=False,
-          capture_output=True,
-          text=True,
-          timeout=self.timeout_seconds,
-        )
-      except FileNotFoundError:
-        return BenchCommandOut(
-          status="failed",
-          message="The bench command was not found in this backend process PATH.",
-          command=_mask_command(command),
-        )
-      except subprocess.TimeoutExpired as exc:
-        return BenchCommandOut(
-          status="failed",
-          message="Bench command timed out.",
-          command=_mask_command(command),
-          output=(exc.stdout or "") + (exc.stderr or ""),
-        )
+      result = self._run_command(command, self.bench_path, self.timeout_seconds)
+      output_parts.append(result.output)
 
-      output_parts.append(completed.stdout)
-      output_parts.append(completed.stderr)
-
-      if completed.returncode != 0:
-        return BenchCommandOut(
-          status="failed",
-          message=f"Bench command failed with exit code {completed.returncode}.",
-          command=_mask_command(command),
-          output="\n".join(part for part in output_parts if part),
-        )
+      if result.status == "failed":
+        result.output = "\n".join(part for part in output_parts if part)
+        return result
 
     return BenchCommandOut(
       status="completed",
       message="Bench command completed.",
       command=_mask_command(last_command),
       output="\n".join(part for part in output_parts if part),
+    )
+
+  def _run_command(self, command: list[str], cwd: Path, timeout_seconds: int) -> BenchCommandOut:
+    try:
+      completed = subprocess.run(
+        command,
+        cwd=cwd,
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=timeout_seconds,
+      )
+    except FileNotFoundError:
+      return BenchCommandOut(
+        status="failed",
+        message=f"Command not found: {command[0]}",
+        command=_mask_command(command),
+      )
+    except subprocess.TimeoutExpired as exc:
+      return BenchCommandOut(
+        status="failed",
+        message="Command timed out.",
+        command=_mask_command(command),
+        output=(exc.stdout or "") + (exc.stderr or ""),
+      )
+
+    output = "\n".join(part for part in [completed.stdout, completed.stderr] if part)
+
+    if completed.returncode != 0:
+      return BenchCommandOut(
+        status="failed",
+        message=f"Command failed with exit code {completed.returncode}.",
+        command=_mask_command(command),
+        output=output,
+      )
+
+    return BenchCommandOut(
+      status="completed",
+      message="Command completed.",
+      command=_mask_command(command),
+      output=output,
     )
 
 
@@ -447,9 +628,111 @@ def _mask_command(command: list[str]) -> list[str]:
   return masked
 
 
+def _parse_terminal_command(raw_command: str) -> list[str] | BenchCommandOut:
+  try:
+    command = shlex.split(raw_command)
+  except ValueError as exc:
+    return BenchCommandOut(
+      status="failed",
+      message=f"Could not parse command: {exc}",
+      command=[],
+    )
+
+  if not command:
+    return BenchCommandOut(
+      status="failed",
+      message="Enter a command before running the terminal.",
+      command=[],
+    )
+
+  if _has_shell_metacharacters(raw_command):
+    return BenchCommandOut(
+      status="failed",
+      message="Shell operators are blocked. Use a single command without pipes, redirects, variables, or command chaining.",
+      command=[],
+    )
+
+  return command
+
+
+def _blocked_os_command_reason(command: list[str]) -> str:
+  executable = Path(command[0]).name
+  blocked_executables = {
+    "chmod",
+    "chown",
+    "dd",
+    "mkfs",
+    "mount",
+    "passwd",
+    "poweroff",
+    "reboot",
+    "rm",
+    "shutdown",
+    "su",
+    "sudo",
+    "umount",
+  }
+
+  if executable in blocked_executables:
+    return f"Command blocked: {executable} is not allowed from the browser terminal."
+
+  blocked_flags = {"--mariadb-root-password", "--admin-password"}
+
+  if any(part in blocked_flags for part in command):
+    return "Command blocked because it contains password arguments. Use the dedicated form instead."
+
+  return ""
+
+
+def _has_shell_metacharacters(raw_command: str) -> bool:
+  blocked = {
+    "\n",
+    "\r",
+    ";",
+    "&",
+    "|",
+    ">",
+    "<",
+    "`",
+    "$",
+    "(",
+    ")",
+  }
+
+  return any(character in raw_command for character in blocked)
+
+
+def _safe_identifier(value: str) -> bool:
+  return bool(value) and all(
+    character.isalnum() or character in {"_", "-"} for character in value
+  )
+
+
+def _safe_site_name(value: str) -> bool:
+  return bool(value) and all(
+    character.isalnum() or character in {"_", "-", "."} for character in value
+  )
+
+
+def _safe_branch(value: str) -> bool:
+  return bool(value) and all(
+    character.isalnum() or character in {"_", "-", ".", "/"} for character in value
+  )
+
+
 def _port_is_open(host: str, port: int) -> bool:
   try:
     with socket.create_connection((host, port), timeout=0.5):
       return True
   except OSError:
     return False
+
+
+def _tail_file(path: Path, line_count: int = 80) -> str:
+  if not path.exists():
+    return ""
+
+  try:
+    return "\n".join(path.read_text(encoding="utf-8", errors="replace").splitlines()[-line_count:])
+  except OSError:
+    return ""

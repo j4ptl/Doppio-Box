@@ -30,6 +30,7 @@ BACKEND_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 VITE_BACKEND_URL=
 BENCH_PATH=/home/jenish/frappe16/frappe-bench16
 BENCH_COMMAND_TIMEOUT_SECONDS=900
+DOPPIO_TERMINAL_TOKEN=change-this-owner-token
 ```
 
 During Vite development, leave `VITE_BACKEND_URL` empty. Vite proxies `/api` and `/health` to `http://127.0.0.1:8001`, so the UI can reach the backend without browser CORS or `localhost` mismatch problems. Keep `localhost:8000` free for Frappe Bench.
@@ -46,6 +47,9 @@ The backend exposes:
 - `POST /api/bench/apps/install`
 - `POST /api/bench/sites/create`
 - `POST /api/terminal/run`
+- `POST /api/terminal/manual`
+- `POST /api/terminal/os`
+- `POST /api/terminal/diagnose`
 - `GET /api/sites`
 - `POST /api/sites`
 - `POST /api/automations/run`
@@ -58,9 +62,9 @@ The backend calls Frappe REST methods with token authentication:
 
 The Doppio UI is split into Overview, Modules, Setup, and Terminal pages. Each page can be opened directly with `#overview`, `#modules`, `#setup`, or `#access`. The layout is responsive for desktop, Android browser, and webview usage, with a persisted light/dark theme toggle. The Modules page loads live Frappe Workspace records, shows each module as a gallery card, provides a short link to open the module directly in Frappe Desk, and runs backend automation checks per module.
 
-The Setup page reads the local bench path from `BENCH_PATH`, and it also lets the user enter a different Frappe Bench folder path. Doppio validates that the folder contains `apps`, `sites`, and `Procfile`, then saves it for local automation. The page shows installed apps and provides bounded bench actions for known Frappe apps such as ERPNext, HRMS, CRM, Helpdesk, Payments, and Insights. The Create Site form runs `bench new-site` and can preinstall selected apps into the new site. The Start Frappe Bench button launches `bench start` from the configured bench folder if Frappe is not already reachable.
+The Setup page reads the local bench path from `BENCH_PATH`, and it also lets the user enter a different Frappe Bench folder path. In Electron mode, the Select folder button opens a native folder picker; in browser mode, paste the folder path manually. Doppio validates that the folder contains `apps`, `sites`, and `Procfile`, then saves it for local automation. The page shows installed apps and provides bounded bench actions for known Frappe apps such as ERPNext, HRMS, CRM, Helpdesk, Payments, and Insights. The Create Site form runs `bench new-site` and can preinstall selected apps into the new site. The Start Frappe Bench button launches `bench start` from the configured bench folder if Frappe is not already reachable.
 
-The Terminal page replaces the old IP/network section. It does not show hostnames, IPs, SSH commands, network interfaces, or service ports. It displays local automation logs for actions started from Doppio buttons, such as app install, site creation, and module automation, so users do not need to type bench commands manually. It also includes a guarded OS terminal bridge for allowlisted local bench actions only: bench version, list sites, list apps, migrate site, and clear site cache.
+The Terminal page replaces the old IP/network section. It does not show hostnames, IPs, SSH commands, network interfaces, or service ports. It displays local automation logs for actions started from Doppio buttons, such as app install, site creation, and module automation, so users do not need to type bench commands manually. It also includes a guarded OS terminal bridge for allowlisted local bench actions only: bench version, list sites, list apps, migrate site, and clear site cache. Users can type a bench command manually from the suggestions, but the backend rejects shell operators, non-bench commands, and password-based `bench new-site`; use the Create Site form for site creation. Owner OS command mode requires `DOPPIO_TERMINAL_TOKEN`, runs commands without a shell, blocks dangerous executables, and prints stdout/stderr in the mini terminal. The Diagnose issue button runs safe health checks and prints each command/result in the terminal log.
 
 To run the Electron shell, install Electron as a dev dependency and run it while Vite is running:
 

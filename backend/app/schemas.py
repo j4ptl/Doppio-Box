@@ -150,6 +150,15 @@ class TerminalCommandCreate(BaseModel):
   site_name: str = ""
 
 
+class TerminalManualCommandCreate(BaseModel):
+  command: str = Field(min_length=1, max_length=500)
+
+
+class TerminalOsCommandCreate(BaseModel):
+  command: str = Field(min_length=1, max_length=500)
+  token: str = Field(default="", max_length=255)
+
+
 class NetworkInterfaceOut(BaseModel):
   name: str
   address: str

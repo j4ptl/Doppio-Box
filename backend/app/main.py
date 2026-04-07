@@ -26,6 +26,8 @@ from .schemas import (
   ModuleAutomationCreate,
   ModuleAutomationOut,
   TerminalCommandCreate,
+  TerminalManualCommandCreate,
+  TerminalOsCommandCreate,
   WorkspaceOut,
 )
 from .seed import seed_defaults
@@ -130,6 +132,25 @@ def run_terminal_command(payload: TerminalCommandCreate) -> BenchCommandOut:
     return bench_manager.run_terminal_action(payload.action, payload.site_name)
   except ValueError as exc:
     raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/terminal/manual", response_model=BenchCommandOut)
+def run_manual_terminal_command(payload: TerminalManualCommandCreate) -> BenchCommandOut:
+  return bench_manager.run_manual_terminal_command(payload.command)
+
+
+@app.post("/api/terminal/os", response_model=BenchCommandOut)
+def run_owner_os_terminal_command(payload: TerminalOsCommandCreate) -> BenchCommandOut:
+  return bench_manager.run_owner_os_command(
+    payload.command,
+    payload.token,
+    settings.terminal_token,
+  )
+
+
+@app.post("/api/terminal/diagnose", response_model=BenchCommandOut)
+def diagnose_terminal() -> BenchCommandOut:
+  return bench_manager.diagnose_system()
 
 
 @app.get("/api/frappe/modules", response_model=list[FrappeModuleOut])
