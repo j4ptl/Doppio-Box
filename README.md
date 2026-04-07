@@ -43,6 +43,7 @@ The backend exposes:
 - `GET /api/bench/summary`
 - `POST /api/bench/apps/install`
 - `POST /api/bench/sites/create`
+- `GET /api/network/access`
 - `GET /api/sites`
 - `POST /api/sites`
 - `POST /api/automations/run`
@@ -56,6 +57,22 @@ The backend calls Frappe REST methods with token authentication:
 The Doppio UI is split into Overview, Modules, Setup, and Access pages. The Modules page loads live Frappe Workspace records, shows each module as a gallery card, provides a short link to open the module directly in Frappe Desk, and runs backend automation checks per module.
 
 The Setup page reads the local bench path from `BENCH_PATH`, shows installed apps, and provides bounded bench actions for known Frappe apps such as ERPNext, HRMS, CRM, Helpdesk, Payments, and Insights. The Create Site form runs `bench new-site` and can preinstall selected apps into the new site. Use the local backend process for bench actions because Docker containers need the bench folder mounted and the `bench` executable available.
+
+The Access page includes a Network Access Center. In the browser it uses `GET /api/network/access`; in Electron it uses the preload bridge exposed as `window.networkAccess`. The Electron files are:
+
+- `electron/main.cjs`
+- `electron/preload.cjs`
+- `electron/networkAccess.cjs`
+
+The network scanner displays hostname, localhost, primary IPv4, network interfaces, listening services, local URLs, network URLs, binding status, database-port warnings, and command suggestions. It does not expose services automatically.
+
+To run the Electron shell, install Electron as a dev dependency and run it while Vite is running:
+
+```bash
+npm install --save-dev electron
+npm run dev
+npm run electron:dev
+```
 
 ## Local Backend Without Docker
 

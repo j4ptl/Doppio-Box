@@ -51,7 +51,13 @@ function getInterfaces() {
     },
   ];
   const seen = new Set(["127.0.0.1"]);
-  const systemInterfaces = os.networkInterfaces();
+  let systemInterfaces = {};
+
+  try {
+    systemInterfaces = os.networkInterfaces();
+  } catch {
+    return interfaces;
+  }
 
   for (const [name, values] of Object.entries(systemInterfaces)) {
     for (const item of values || []) {

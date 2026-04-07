@@ -933,7 +933,9 @@ function ServiceCard({
   onSuggestion: (value: string) => void;
 }) {
   const statusText =
-    service.status === "network-accessible" ? "Network Accessible" : "Local Only";
+    service.status === "network-accessible"
+      ? "Running / Network Accessible"
+      : "Running / Local Only";
 
   return (
     <article className="service-card">
