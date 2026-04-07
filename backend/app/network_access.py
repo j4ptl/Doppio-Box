@@ -1,11 +1,14 @@
+import getpass
 import re
 import socket
 import subprocess
+from pathlib import Path
 
-from .schemas import NetworkAccessOut, NetworkInterfaceOut, NetworkServiceOut
+from .schemas import NetworkAccessOut, NetworkInterfaceOut, NetworkServiceOut, SSHAccessOut
 
 
 SERVICE_NAMES = {
+  22: "SSH Remote Terminal",
   8000: "Frappe/ERPNext",
   3000: "React/Vite",
   5173: "Doppio React/Vite",
@@ -16,6 +19,7 @@ SERVICE_NAMES = {
 }
 
 COMMAND_SUGGESTIONS = {
+  22: "sudo apt install openssh-server && sudo systemctl enable --now ssh",
   8000: "bench start and ensure external binding when you intentionally need LAN access.",
   3000: "npm run dev -- --host 0.0.0.0 --port 3000",
   5173: "npm run dev -- --host 0.0.0.0",
@@ -40,6 +44,7 @@ def build_network_access() -> NetworkAccessOut:
     ip=ip_address,
     interfaces=interfaces,
     services=services,
+    ssh=_ssh_access(ip_address, services),
   )
 
 
@@ -141,6 +146,36 @@ def _service_out(port: int, bind_address: str, ip_address: str) -> NetworkServic
     status="network-accessible" if network_accessible else "local-only",
     warning=warning,
     command_suggestion=suggestion,
+  )
+
+
+def _ssh_access(ip_address: str, services: list[NetworkServiceOut]) -> SSHAccessOut:
+  username = getpass.getuser()
+  project_path = str(Path.cwd())
+  ssh_service = next((service for service in services if service.port == 22), None)
+  status = "not-running"
+  suggestion = "Install and start OpenSSH only if you intentionally need remote terminal access: sudo apt install openssh-server && sudo systemctl enable --now ssh"
+
+  if ssh_service:
+    status = ssh_service.status
+    if ssh_service.status == "network-accessible":
+      suggestion = "SSH is listening for network access. Use strong passwords or SSH keys and keep firewall rules strict."
+    else:
+      suggestion = "SSH is local-only. Review sshd_config ListenAddress and firewall rules only if LAN access is required."
+
+  remote = f"{username}@{ip_address}"
+
+  return SSHAccessOut(
+    username=username,
+    host=ip_address,
+    project_path=project_path,
+    status=status,
+    ssh_command=f"ssh {remote}",
+    sftp_command=f"sftp {remote}",
+    scp_download_command=f"scp -r {remote}:{project_path} ./Erp_Project",
+    rsync_download_command=f"rsync -avz {remote}:{project_path}/ ./Erp_Project/",
+    vscode_remote_command=f"code --remote ssh-remote+{remote} {project_path}",
+    suggestion=suggestion,
   )
 
 

@@ -270,7 +270,7 @@ class BenchManager:
       return BenchCommandOut(
         status="failed",
         message="Bench path does not exist.",
-        command=commands[0] if commands else [],
+        command=_mask_command(commands[0]) if commands else [],
       )
 
     output_parts = []
@@ -291,13 +291,13 @@ class BenchManager:
         return BenchCommandOut(
           status="failed",
           message="The bench command was not found in this backend process PATH.",
-          command=command,
+          command=_mask_command(command),
         )
       except subprocess.TimeoutExpired as exc:
         return BenchCommandOut(
           status="failed",
           message="Bench command timed out.",
-          command=command,
+          command=_mask_command(command),
           output=(exc.stdout or "") + (exc.stderr or ""),
         )
 
@@ -308,16 +308,38 @@ class BenchManager:
         return BenchCommandOut(
           status="failed",
           message=f"Bench command failed with exit code {completed.returncode}.",
-          command=command,
+          command=_mask_command(command),
           output="\n".join(part for part in output_parts if part),
         )
 
     return BenchCommandOut(
       status="completed",
       message="Bench command completed.",
-      command=last_command,
+      command=_mask_command(last_command),
       output="\n".join(part for part in output_parts if part),
     )
+
+
+def _mask_command(command: list[str]) -> list[str]:
+  sensitive_flags = {
+    "--admin-password",
+    "--mariadb-root-password",
+  }
+  masked: list[str] = []
+  hide_next = False
+
+  for part in command:
+    if hide_next:
+      masked.append("********")
+      hide_next = False
+      continue
+
+    masked.append(part)
+
+    if part in sensitive_flags:
+      hide_next = True
+
+  return masked
 
 
 def _host_ip() -> str:

@@ -1,37 +1,36 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   BenchApp,
+  BenchCommandResult,
   BenchSummary,
   FrappeModule,
   ManagedSite,
-  NetworkAccessData,
-  NetworkService,
   WorkspaceData,
   automateFrappeModule,
-  copyAccessText,
   createBenchSite,
   installBenchApp,
   loadBenchSummary,
   loadFrappeModules,
-  loadNetworkAccess,
   loadWorkspaceData,
-  openAccessUrl,
 } from "./lib/doppioApi";
 
 type Page = "overview" | "modules" | "setup" | "access";
+type ThemeMode = "light" | "dark";
+
+const themeStorageKey = "doppio.theme";
 
 const pages: Array<{ key: Page; label: string }> = [
   { key: "overview", label: "Overview" },
   { key: "modules", label: "Modules" },
   { key: "setup", label: "Setup" },
-  { key: "access", label: "Access" },
+  { key: "access", label: "Terminal" },
 ];
 
 const pageCopy: Record<Page, { eyebrow: string; title: string; copy: string }> = {
   overview: {
     eyebrow: "Frappe ERPNext Control",
     title: "Doppio Box cloud control desk.",
-    copy: "Manage live Frappe modules, bench apps, local sites, and direct access links from one workspace.",
+    copy: "Manage live Frappe modules, bench apps, local sites, and local automation from one workspace.",
   },
   modules: {
     eyebrow: "Frappe Gallery",
@@ -44,18 +43,55 @@ const pageCopy: Record<Page, { eyebrow: string; title: string; copy: string }> =
     copy: "Prepare ERPNext, HRMS, CRM, Helpdesk, and related Frappe apps from a single setup page.",
   },
   access: {
-    eyebrow: "Network Access Center",
-    title: "Local and LAN services.",
-    copy: "Detect listening ports, show localhost and network URLs, and keep database ports clearly marked.",
+    eyebrow: "Local Automation Terminal",
+    title: "Run bench work without manual commands.",
+    copy: "Install apps, create sites, and automate Frappe modules from Doppio buttons while the mini terminal shows local backend output.",
   },
+};
+
+type PageRendererProps = {
+  page: Page;
+  workspace: WorkspaceData;
+  bench: BenchSummary | null;
+  modules: FrappeModule[];
+  selectedSite: ManagedSite | null;
+  selectedSiteId: number | null;
+  selectedModule: FrappeModule | null;
+  selectedModuleKey: string;
+  running: boolean;
+  automationMessage: string;
+  galleryModule: FrappeModule | null;
+  setupMessage: string;
+  installingKey: string;
+  creatingSite: boolean;
+  siteName: string;
+  adminPassword: string;
+  dbRootUsername: string;
+  dbRootPassword: string;
+  siteInstallApps: string[];
+  terminalLog: string[];
+  onNavigate: (page: Page) => void;
+  onSelectSite: (siteId: number | null) => void;
+  onSelectModule: (moduleKey: string) => void;
+  onGallery: (moduleItem: FrappeModule | null) => void;
+  onAutomate: (moduleItem: FrappeModule) => void;
+  onRefreshBench: () => void;
+  onInstallApp: (app: BenchApp) => void;
+  onSiteName: (value: string) => void;
+  onAdminPassword: (value: string) => void;
+  onDbRootUsername: (value: string) => void;
+  onDbRootPassword: (value: string) => void;
+  onToggleSiteInstallApp: (appKey: string) => void;
+  onCreateSite: () => void;
+  onClearTerminal: () => void;
 };
 
 function App() {
   const [workspace, setWorkspace] = useState<WorkspaceData | null>(null);
   const [bench, setBench] = useState<BenchSummary | null>(null);
-  const [networkAccess, setNetworkAccess] = useState<NetworkAccessData | null>(null);
   const [modules, setModules] = useState<FrappeModule[]>([]);
-  const [page, setPage] = useState<Page>("overview");
+  const [page, setPage] = useState<Page>(loadInitialPage);
+  const [theme, setTheme] = useState<ThemeMode>(loadTheme);
   const [loading, setLoading] = useState(true);
   const [selectedSiteId, setSelectedSiteId] = useState<number | null>(null);
   const [selectedModuleKey, setSelectedModuleKey] = useState("");
@@ -63,8 +99,10 @@ function App() {
   const [running, setRunning] = useState(false);
   const [automationMessage, setAutomationMessage] = useState("");
   const [setupMessage, setSetupMessage] = useState("");
-  const [accessMessage, setAccessMessage] = useState("");
-  const [suggestion, setSuggestion] = useState("");
+  const [terminalLog, setTerminalLog] = useState<string[]>([
+    "Doppio local terminal ready.",
+    "Use setup and module buttons to run bench automation through the backend.",
+  ]);
   const [installingKey, setInstallingKey] = useState("");
   const [creatingSite, setCreatingSite] = useState(false);
   const [siteName, setSiteName] = useState("new-site.local");
@@ -76,18 +114,13 @@ function App() {
   useEffect(() => {
     let mounted = true;
 
-    Promise.allSettled([
-      loadWorkspaceData(),
-      loadBenchSummary(),
-      loadNetworkAccess(),
-    ]).then((results) => {
+    Promise.allSettled([loadWorkspaceData(), loadBenchSummary()]).then((results) => {
       if (!mounted) {
         return;
       }
 
       const workspaceResult = results[0];
       const benchResult = results[1];
-      const networkResult = results[2];
 
       if (workspaceResult.status === "fulfilled") {
         setWorkspace(workspaceResult.value);
@@ -100,17 +133,28 @@ function App() {
         setSetupMessage("Bench summary is not available. Start the backend and check BENCH_PATH.");
       }
 
-      if (networkResult.status === "fulfilled") {
-        setNetworkAccess(networkResult.value);
-      } else {
-        setAccessMessage("Network scan is not available. Start the backend or Electron IPC bridge.");
-      }
-
       setLoading(false);
     });
 
     return () => {
       mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem(themeStorageKey, theme);
+  }, [theme]);
+
+  useEffect(() => {
+    function onHashChange() {
+      setPage(loadInitialPage());
+    }
+
+    window.addEventListener("hashchange", onHashChange);
+
+    return () => {
+      window.removeEventListener("hashchange", onHashChange);
     };
   }, []);
 
@@ -164,31 +208,22 @@ function App() {
     }
   }
 
-  async function refreshNetworkAccess() {
-    try {
-      setNetworkAccess(await loadNetworkAccess());
-      setAccessMessage("Network access data refreshed.");
-    } catch (error) {
-      setAccessMessage(error instanceof Error ? error.message : "Network access refresh failed");
-    }
+  function appendTerminalLog(lines: string | string[]) {
+    const entries = Array.isArray(lines) ? lines : [lines];
+
+    setTerminalLog((current) => [...current, ...entries].slice(-120));
   }
 
-  async function handleOpenAccessUrl(url: string) {
-    try {
-      await openAccessUrl(url);
-      setAccessMessage(`Opened ${url}`);
-    } catch (error) {
-      setAccessMessage(error instanceof Error ? error.message : "Could not open URL");
-    }
+  function appendBenchResult(result: BenchCommandResult) {
+    appendTerminalLog([
+      `$ ${result.command.join(" ")}`,
+      result.message,
+      ...(result.output.trim() ? result.output.trim().split("\n").slice(-40) : []),
+    ]);
   }
 
-  async function handleCopyAccessUrl(url: string) {
-    try {
-      await copyAccessText(url);
-      setAccessMessage(`Copied ${url}`);
-    } catch (error) {
-      setAccessMessage(error instanceof Error ? error.message : "Could not copy URL");
-    }
+  function clearTerminalLog() {
+    setTerminalLog(["Doppio local terminal cleared."]);
   }
 
   async function handleModuleAutomation(moduleItem: FrappeModule) {
@@ -198,6 +233,7 @@ function App() {
 
     setRunning(true);
     setAutomationMessage(`Starting ${moduleItem.title} automation...`);
+    appendTerminalLog(`$ automate frappe module "${moduleItem.module}" on site ${selectedSiteId}`);
 
     try {
       const result = await automateFrappeModule({
@@ -205,10 +241,16 @@ function App() {
         module: moduleItem.module,
       });
       setAutomationMessage(result.message);
+      appendTerminalLog([
+        result.message,
+        `Module: ${result.module}`,
+        `DocTypes available: ${result.doctype_count}`,
+        `Status: ${result.status}`,
+      ]);
     } catch (error) {
-      setAutomationMessage(
-        error instanceof Error ? error.message : "Module automation failed"
-      );
+      const message = error instanceof Error ? error.message : "Module automation failed";
+      setAutomationMessage(message);
+      appendTerminalLog(`ERROR: ${message}`);
     } finally {
       setRunning(false);
     }
@@ -219,6 +261,7 @@ function App() {
 
     setInstallingKey(app.key);
     setSetupMessage(`Running bench setup for ${app.name}...`);
+    appendTerminalLog(`$ install app "${app.name}"${site ? ` on ${site}` : ""}`);
 
     try {
       const result = await installBenchApp({
@@ -227,9 +270,12 @@ function App() {
         install_to_site: Boolean(site),
       });
       setSetupMessage(result.message);
+      appendBenchResult(result);
       await refreshBench();
     } catch (error) {
-      setSetupMessage(error instanceof Error ? error.message : "Bench app install failed");
+      const message = error instanceof Error ? error.message : "Bench app install failed";
+      setSetupMessage(message);
+      appendTerminalLog(`ERROR: ${message}`);
     } finally {
       setInstallingKey("");
     }
@@ -238,6 +284,7 @@ function App() {
   async function handleCreateSite() {
     setCreatingSite(true);
     setSetupMessage(`Creating ${siteName} in Frappe Bench...`);
+    appendTerminalLog(`$ create site "${siteName}" with apps: ${siteInstallApps.join(", ") || "none"}`);
 
     try {
       const result = await createBenchSite({
@@ -248,9 +295,12 @@ function App() {
         install_apps: siteInstallApps,
       });
       setSetupMessage(result.message);
+      appendBenchResult(result);
       await refreshBench();
     } catch (error) {
-      setSetupMessage(error instanceof Error ? error.message : "Bench site create failed");
+      const message = error instanceof Error ? error.message : "Bench site create failed";
+      setSetupMessage(message);
+      appendTerminalLog(`ERROR: ${message}`);
     } finally {
       setCreatingSite(false);
     }
@@ -264,6 +314,15 @@ function App() {
     );
   }
 
+  function navigatePage(nextPage: Page) {
+    setPage(nextPage);
+    window.history.replaceState(null, "", `#${nextPage}`);
+  }
+
+  function toggleTheme() {
+    setTheme((current) => (current === "dark" ? "light" : "dark"));
+  }
+
   if (loading || !workspace) {
     return (
       <main className="loading-shell">
@@ -273,22 +332,62 @@ function App() {
     );
   }
 
+  const renderedPage = renderPage({
+    page,
+    workspace,
+    bench,
+    modules,
+    selectedSite,
+    selectedSiteId,
+    selectedModule,
+    selectedModuleKey,
+    running,
+    automationMessage,
+    galleryModule,
+    setupMessage,
+    installingKey,
+    creatingSite,
+    siteName,
+    adminPassword,
+    dbRootUsername,
+    dbRootPassword,
+    siteInstallApps,
+    terminalLog,
+    onNavigate: navigatePage,
+    onSelectSite: setSelectedSiteId,
+    onSelectModule: setSelectedModuleKey,
+    onGallery: setGalleryModule,
+    onAutomate: handleModuleAutomation,
+    onRefreshBench: refreshBench,
+    onInstallApp: handleInstallApp,
+    onSiteName: setSiteName,
+    onAdminPassword: setAdminPassword,
+    onDbRootUsername: setDbRootUsername,
+    onDbRootPassword: setDbRootPassword,
+    onToggleSiteInstallApp: toggleSiteInstallApp,
+    onCreateSite: handleCreateSite,
+    onClearTerminal: clearTerminalLog,
+  });
+
   return (
-    <main className="app-shell">
+    <main className={`app-shell page-${page}`}>
       <nav className="top-nav" aria-label="Doppio pages">
         <strong>Doppio Box</strong>
-        <div>
+        <div className="nav-actions">
           {pages.map((item) => (
             <button
               type="button"
               className={page === item.key ? "active" : ""}
-              onClick={() => setPage(item.key)}
+              onClick={() => navigatePage(item.key)}
               key={item.key}
             >
               {item.label}
             </button>
           ))}
         </div>
+        <button type="button" className="theme-toggle" onClick={toggleTheme}>
+          {theme === "dark" ? "Light mode" : "Dark mode"}
+        </button>
       </nav>
 
       <section className="hero">
@@ -297,10 +396,10 @@ function App() {
           <h1>{hero.title}</h1>
           <p className="hero-copy">{hero.copy}</p>
           <div className="hero-actions">
-            <button type="button" className="primary-button" onClick={() => setPage("modules")}>
+            <button type="button" className="primary-button" onClick={() => navigatePage("modules")}>
               Browse modules
             </button>
-            <button type="button" className="secondary-button" onClick={() => setPage("setup")}>
+            <button type="button" className="secondary-button" onClick={() => navigatePage("setup")}>
               Configure bench
             </button>
           </div>
@@ -332,70 +431,9 @@ function App() {
         </section>
       ) : null}
 
-      {page === "overview" ? (
-        <OverviewPage
-          workspace={workspace}
-          bench={bench}
-          selectedSiteId={selectedSiteId}
-          onSelectSite={setSelectedSiteId}
-          onOpenModules={() => setPage("modules")}
-          onOpenSetup={() => setPage("setup")}
-        />
-      ) : null}
-
-      {page === "modules" ? (
-        <ModulesPage
-          modules={modules}
-          selectedModuleKey={selectedModuleKey}
-          running={running}
-          selectedSite={selectedSite}
-          selectedSiteId={selectedSiteId}
-          selectedModule={selectedModule}
-          sites={workspace.sites}
-          automationMessage={automationMessage}
-          galleryModule={galleryModule}
-          onSelectSite={setSelectedSiteId}
-          onSelectModule={setSelectedModuleKey}
-          onGallery={setGalleryModule}
-          onAutomate={handleModuleAutomation}
-        />
-      ) : null}
-
-      {page === "setup" ? (
-        <SetupPage
-          bench={bench}
-          setupMessage={setupMessage}
-          installingKey={installingKey}
-          creatingSite={creatingSite}
-          siteName={siteName}
-          adminPassword={adminPassword}
-          dbRootUsername={dbRootUsername}
-          dbRootPassword={dbRootPassword}
-          siteInstallApps={siteInstallApps}
-          onRefreshBench={refreshBench}
-          onInstallApp={handleInstallApp}
-          onSiteName={setSiteName}
-          onAdminPassword={setAdminPassword}
-          onDbRootUsername={setDbRootUsername}
-          onDbRootPassword={setDbRootPassword}
-          onToggleSiteInstallApp={toggleSiteInstallApp}
-          onCreateSite={handleCreateSite}
-        />
-      ) : null}
-
-      {page === "access" ? (
-        <AccessPage
-          bench={bench}
-          workspace={workspace}
-          networkAccess={networkAccess}
-          accessMessage={accessMessage}
-          suggestion={suggestion}
-          onRefresh={refreshNetworkAccess}
-          onOpenUrl={handleOpenAccessUrl}
-          onCopyUrl={handleCopyAccessUrl}
-          onSuggestion={setSuggestion}
-        />
-      ) : null}
+      <section className="page-frame" aria-label={`${pages.find((item) => item.key === page)?.label ?? "Doppio"} page`}>
+        {renderedPage}
+      </section>
     </main>
   );
 }
@@ -451,7 +489,7 @@ function OverviewPage({
             <h2>{bench?.exists ? "Local bench ready" : "Bench not found"}</h2>
           </div>
           <div className="summary-list">
-            <SummaryItem label="Bench path" value={bench?.bench_path ?? "Not loaded"} />
+            <SummaryItem label="Bench connection" value={bench?.exists ? "Configured" : "Not loaded"} />
             <SummaryItem label="Installed apps" value={String(bench?.apps_installed ?? 0)} />
             <SummaryItem label="Sites" value={String(bench?.sites_count ?? 0)} />
             <SummaryItem label="Default site" value={bench?.default_site || "Not set"} />
@@ -466,6 +504,81 @@ function OverviewPage({
       </section>
     </>
   );
+}
+
+function renderPage(props: PageRendererProps) {
+  switch (props.page) {
+    case "overview":
+      return (
+        <OverviewPage
+          workspace={props.workspace}
+          bench={props.bench}
+          selectedSiteId={props.selectedSiteId}
+          onSelectSite={(siteId) => props.onSelectSite(siteId)}
+          onOpenModules={() => props.onNavigate("modules")}
+          onOpenSetup={() => props.onNavigate("setup")}
+        />
+      );
+    case "modules":
+      return (
+        <ModulesPage
+          modules={props.modules}
+          selectedModuleKey={props.selectedModuleKey}
+          running={props.running}
+          selectedSite={props.selectedSite}
+          selectedSiteId={props.selectedSiteId}
+          selectedModule={props.selectedModule}
+          sites={props.workspace.sites}
+          automationMessage={props.automationMessage}
+          galleryModule={props.galleryModule}
+          onSelectSite={props.onSelectSite}
+          onSelectModule={props.onSelectModule}
+          onGallery={props.onGallery}
+          onAutomate={props.onAutomate}
+        />
+      );
+    case "setup":
+      return (
+        <SetupPage
+          bench={props.bench}
+          setupMessage={props.setupMessage}
+          installingKey={props.installingKey}
+          creatingSite={props.creatingSite}
+          siteName={props.siteName}
+          adminPassword={props.adminPassword}
+          dbRootUsername={props.dbRootUsername}
+          dbRootPassword={props.dbRootPassword}
+          siteInstallApps={props.siteInstallApps}
+          onRefreshBench={props.onRefreshBench}
+          onInstallApp={props.onInstallApp}
+          onSiteName={props.onSiteName}
+          onAdminPassword={props.onAdminPassword}
+          onDbRootUsername={props.onDbRootUsername}
+          onDbRootPassword={props.onDbRootPassword}
+          onToggleSiteInstallApp={props.onToggleSiteInstallApp}
+          onCreateSite={props.onCreateSite}
+        />
+      );
+    case "access":
+      return (
+        <TerminalPage
+          bench={props.bench}
+          workspace={props.workspace}
+          modules={props.modules}
+          selectedModule={props.selectedModule}
+          selectedModuleKey={props.selectedModuleKey}
+          selectedSiteId={props.selectedSiteId}
+          running={props.running}
+          terminalLog={props.terminalLog}
+          onNavigate={props.onNavigate}
+          onSelectModule={props.onSelectModule}
+          onAutomate={props.onAutomate}
+          onClearTerminal={props.onClearTerminal}
+        />
+      );
+    default:
+      return null;
+  }
 }
 
 function ModulesPage({
@@ -760,221 +873,161 @@ function SetupPage({
   );
 }
 
-function AccessPage({
+function TerminalPage({
   bench,
   workspace,
-  networkAccess,
-  accessMessage,
-  suggestion,
-  onRefresh,
-  onOpenUrl,
-  onCopyUrl,
-  onSuggestion,
+  modules,
+  selectedModule,
+  selectedModuleKey,
+  selectedSiteId,
+  running,
+  terminalLog,
+  onNavigate,
+  onSelectModule,
+  onAutomate,
+  onClearTerminal,
 }: {
   bench: BenchSummary | null;
   workspace: WorkspaceData;
-  networkAccess: NetworkAccessData | null;
-  accessMessage: string;
-  suggestion: string;
-  onRefresh: () => void;
-  onOpenUrl: (url: string) => void;
-  onCopyUrl: (url: string) => void;
-  onSuggestion: (value: string) => void;
+  modules: FrappeModule[];
+  selectedModule: FrappeModule | null;
+  selectedModuleKey: string;
+  selectedSiteId: number | null;
+  running: boolean;
+  terminalLog: string[];
+  onNavigate: (page: Page) => void;
+  onSelectModule: (moduleKey: string) => void;
+  onAutomate: (moduleItem: FrappeModule) => void;
+  onClearTerminal: () => void;
 }) {
   return (
     <>
-      <section className="metrics-grid" aria-label="Network overview">
+      <section className="metrics-grid" aria-label="Local automation overview">
         <article className="metric-card">
-          <span>Device Name</span>
-          <strong>{networkAccess?.hostname ?? "Unknown"}</strong>
-          <p>Hostname from the system network layer.</p>
+          <span>Bench</span>
+          <strong>{bench?.exists ? "Ready" : "Missing"}</strong>
+          <p>Local Frappe Bench actions run through the Doppio backend.</p>
         </article>
         <article className="metric-card">
-          <span>Local IP</span>
-          <strong>{networkAccess?.ip ?? "Not detected"}</strong>
-          <p>Primary IPv4 address, excluding 127.0.0.1.</p>
+          <span>Installed Apps</span>
+          <strong>{bench?.apps_installed ?? 0}</strong>
+          <p>Apps detected in the local bench catalog.</p>
         </article>
         <article className="metric-card">
-          <span>Localhost</span>
-          <strong>{networkAccess?.localhost ?? "127.0.0.1"}</strong>
-          <p>Loopback access for local-only services.</p>
+          <span>Sites</span>
+          <strong>{bench?.sites_count ?? 0}</strong>
+          <p>Sites detected from the local Frappe Bench.</p>
         </article>
         <article className="metric-card">
-          <span>Running Services</span>
-          <strong>{networkAccess?.services.length ?? 0}</strong>
-          <p>Active listening ports detected from the system.</p>
+          <span>Live Modules</span>
+          <strong>{modules.length}</strong>
+          <p>ERPNext workspaces ready for button-based automation.</p>
         </article>
+      </section>
+
+      <section className="workspace-grid terminal-layout">
+        <article className="panel terminal-panel">
+          <div className="section-heading split-heading">
+            <div>
+              <p className="eyebrow">Doppio Terminal</p>
+              <h2>Button-driven local automation</h2>
+            </div>
+            <button type="button" className="secondary-button small-button" onClick={onClearTerminal}>
+              Clear
+            </button>
+          </div>
+          <p className="privacy-note">
+            IP, SSH, hostname, and network service sections are removed from this page.
+            Doppio only shows local command progress from actions you start with buttons.
+          </p>
+          <pre className="mini-terminal" aria-label="Automation terminal output">
+            {terminalLog.map((line, index) => (
+              <span className="terminal-line" key={`${line}-${index}`}>
+                {line}
+              </span>
+            ))}
+          </pre>
+        </article>
+
+        <aside className="panel command-panel">
+          <div className="section-heading">
+            <p className="eyebrow">Quick Actions</p>
+            <h2>No manual terminal typing</h2>
+          </div>
+          <div className="selected-action">
+            <span>Current workspace</span>
+            <strong>{workspace.site}</strong>
+            <p>{workspace.mode}</p>
+          </div>
+          <button type="button" className="run-button" onClick={() => onNavigate("setup")}>
+            Create site or install apps
+          </button>
+          <button type="button" className="ghost-button" onClick={() => onNavigate("modules")}>
+            Open module gallery
+          </button>
+          <label className="control-field">
+            <span>Automate module</span>
+            <select value={selectedModuleKey} onChange={(event) => onSelectModule(event.target.value)}>
+              {modules.map((moduleItem) => (
+                <option value={moduleItem.key} key={moduleItem.key}>
+                  {moduleItem.title}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            className="run-button"
+            disabled={running || !selectedModule || !selectedSiteId}
+            onClick={() => selectedModule && onAutomate(selectedModule)}
+          >
+            {running ? "Running automation" : "Automate selected module"}
+          </button>
+        </aside>
       </section>
 
       <section className="panel">
-        <div className="section-heading split-heading">
-          <div>
-            <p className="eyebrow">Network Access Center</p>
-            <h2>Running apps and services</h2>
-          </div>
-          <button type="button" className="secondary-button small-button" onClick={onRefresh}>
-            Rescan
-          </button>
+        <div className="section-heading">
+          <p className="eyebrow">Local Bench Scope</p>
+          <h2>Automation boundary</h2>
         </div>
-
-        {networkAccess?.services.length ? (
-          <div className="service-grid">
-            {networkAccess.services.map((service) => (
-              <ServiceCard
-                service={service}
-                onOpenUrl={onOpenUrl}
-                onCopyUrl={onCopyUrl}
-                onSuggestion={onSuggestion}
-                key={`${service.port}-${service.bind_address}`}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="empty-state">
-            No listening ports detected. Start Frappe, Vite, FastAPI, or MariaDB
-            and rescan this page.
-          </p>
-        )}
-
-        {suggestion ? (
-          <div className="suggestion-panel">
-            <span>Command Suggestion</span>
-            <code>{suggestion}</code>
-          </div>
-        ) : null}
-
-        {accessMessage ? <p className="process-message">{accessMessage}</p> : null}
-      </section>
-
-      <section className="workspace-grid">
-        <article className="panel">
-          <div className="section-heading">
-            <p className="eyebrow">Network Interfaces</p>
-            <h2>Device addresses</h2>
-          </div>
-          <div className="access-grid">
-            {networkAccess?.interfaces.map((item) => (
-              <article className="access-card" key={`${item.name}-${item.address}`}>
-                <span>{item.name}</span>
-                <strong>{item.address}</strong>
-                <p>{item.family} {item.internal ? "internal" : "network"}</p>
-              </article>
-            )) ?? <p className="empty-state">Network interfaces are not loaded.</p>}
-          </div>
-        </article>
-
-        <aside className="panel">
-          <div className="section-heading">
-            <p className="eyebrow">Known Access</p>
-            <h2>Doppio and Frappe links</h2>
-          </div>
-          <div className="access-grid">
-            {bench?.access_urls.map((item) => (
-              <a href={item.url} target="_blank" rel="noreferrer" className="access-card" key={item.label}>
-                <span>{item.label}</span>
-                <strong>{item.url}</strong>
-                <p>{item.detail}</p>
-              </a>
-            )) ?? <p className="empty-state">Access links are not loaded.</p>}
-          </div>
-        </aside>
-      </section>
-
-      <section className="workspace-grid">
-        <article className="panel">
-          <div className="section-heading">
-            <p className="eyebrow">Sites</p>
-            <h2>Bench and Doppio sites</h2>
-          </div>
-          <div className="site-list">
-            {bench?.sites.map((site) => (
-              <a className="site-row" href={site.desk_url} target="_blank" rel="noreferrer" key={site.name}>
-                <div>
-                  <strong>{site.name}</strong>
-                  <p>{site.path}</p>
-                </div>
-                <span data-status={site.config_found ? "ready" : "needs_setup"}>bench</span>
-              </a>
-            ))}
-            {workspace.sites.map((site) => (
-              <a className="site-row" href={site.url} target="_blank" rel="noreferrer" key={site.id}>
-                <div>
-                  <strong>{site.name}</strong>
-                  <p>{site.url}</p>
-                </div>
-                <span data-status={site.status}>{site.environment}</span>
-              </a>
-            ))}
-          </div>
-        </article>
-
-        <aside className="notice-panel warning-panel">
-          <strong>Security boundary</strong>
-          <p>
-            Doppio only displays network information here. It does not expose
-            services automatically. Keep database ports such as 3306 and 6379
-            local unless you have firewall rules and hardened credentials.
-          </p>
-        </aside>
+        <div className="terminal-action-grid">
+          <article>
+            <span>App install</span>
+            <strong>Setup page button</strong>
+            <p>Runs the backend bench install workflow for ERPNext, HRMS, CRM, Helpdesk, Payments, or Insights.</p>
+          </article>
+          <article>
+            <span>Site create</span>
+            <strong>Setup page form</strong>
+            <p>Creates a local Frappe site and installs selected apps without making the user type bench commands.</p>
+          </article>
+          <article>
+            <span>Module automation</span>
+            <strong>Modules or Terminal page</strong>
+            <p>Checks the selected Frappe module through the live backend connection and writes progress here.</p>
+          </article>
+        </div>
       </section>
     </>
   );
 }
 
-function ServiceCard({
-  service,
-  onOpenUrl,
-  onCopyUrl,
-  onSuggestion,
-}: {
-  service: NetworkService;
-  onOpenUrl: (url: string) => void;
-  onCopyUrl: (url: string) => void;
-  onSuggestion: (value: string) => void;
-}) {
-  const statusText =
-    service.status === "network-accessible"
-      ? "Running / Network Accessible"
-      : "Running / Local Only";
+function loadTheme(): ThemeMode {
+  const stored = localStorage.getItem(themeStorageKey);
 
-  return (
-    <article className="service-card">
-      <div className="service-card-head">
-        <div>
-          <span>{service.bind_address}</span>
-          <strong>{service.name}</strong>
-        </div>
-        <small data-status={service.status}>{statusText}</small>
-      </div>
-      <p>Port {service.port}</p>
-      <div className="url-list">
-        <label>
-          Local URL
-          <code>{service.local_url}</code>
-        </label>
-        <label>
-          Network URL
-          <code>{service.network_url}</code>
-        </label>
-      </div>
-      {service.warning ? <p className="security-warning">{service.warning}</p> : null}
-      <div className="service-actions">
-        <button type="button" onClick={() => onOpenUrl(service.local_url)}>
-          Open in Browser
-        </button>
-        <button type="button" onClick={() => onCopyUrl(service.network_url)}>
-          Copy URL
-        </button>
-        <button
-          type="button"
-          disabled={!service.command_suggestion}
-          onClick={() => onSuggestion(service.command_suggestion)}
-        >
-          Show Command Suggestion
-        </button>
-      </div>
-    </article>
-  );
+  if (stored === "dark" || stored === "light") {
+    return stored;
+  }
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function loadInitialPage(): Page {
+  const hashPage = window.location.hash.replace("#", "");
+  const found = pages.find((item) => item.key === hashPage);
+
+  return found?.key ?? "overview";
 }
 
 function SiteRow({

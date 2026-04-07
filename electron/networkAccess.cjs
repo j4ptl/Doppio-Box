@@ -2,6 +2,7 @@ const { execFile } = require("node:child_process");
 const os = require("node:os");
 
 const serviceNames = {
+  22: "SSH Remote Terminal",
   8000: "Frappe/ERPNext",
   3000: "React/Vite",
   5173: "Doppio React/Vite",
@@ -12,6 +13,7 @@ const serviceNames = {
 };
 
 const commandSuggestions = {
+  22: "sudo apt install openssh-server && sudo systemctl enable --now ssh",
   8000: "bench start and ensure external binding when you intentionally need LAN access.",
   3000: "npm run dev -- --host 0.0.0.0 --port 3000",
   5173: "npm run dev -- --host 0.0.0.0",
@@ -38,6 +40,7 @@ async function getNetworkAccess() {
     localhost: "127.0.0.1",
     interfaces,
     services,
+    ssh: getSshAccess(ip, services),
   };
 }
 
@@ -234,6 +237,46 @@ function toService(listener, ip) {
       : commandSuggestions[listener.port] ||
         `Restart the service on port ${listener.port} with host 0.0.0.0 only if LAN access is required.`,
   };
+}
+
+function getSshAccess(ip, services) {
+  const username = getUsername();
+  const projectPath = process.cwd();
+  const remote = `${username}@${ip}`;
+  const sshService = services.find((service) => service.port === 22);
+  let status = "not-running";
+  let suggestion =
+    "Install and start OpenSSH only if you intentionally need remote terminal access: sudo apt install openssh-server && sudo systemctl enable --now ssh";
+
+  if (sshService) {
+    status = sshService.status;
+    suggestion =
+      sshService.status === "network-accessible"
+        ? "SSH is listening for network access. Use strong passwords or SSH keys and keep firewall rules strict."
+        : "SSH is local-only. Review sshd_config ListenAddress and firewall rules only if LAN access is required.";
+  }
+
+  return {
+    username,
+    host: ip,
+    port: 22,
+    project_path: projectPath,
+    status,
+    ssh_command: `ssh ${remote}`,
+    sftp_command: `sftp ${remote}`,
+    scp_download_command: `scp -r ${remote}:${projectPath} ./Erp_Project`,
+    rsync_download_command: `rsync -avz ${remote}:${projectPath}/ ./Erp_Project/`,
+    vscode_remote_command: `code --remote ssh-remote+${remote} ${projectPath}`,
+    suggestion,
+  };
+}
+
+function getUsername() {
+  try {
+    return os.userInfo().username;
+  } catch {
+    return process.env.USER || process.env.USERNAME || "user";
+  }
 }
 
 function isNetworkBind(bindAddress) {

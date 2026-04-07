@@ -10,7 +10,6 @@ from .config import get_settings
 from .database import SessionLocal, get_session, init_db
 from .frappe import FrappeClient, site_has_credentials
 from .models import AppModule, AutomationRun, ManagedSite
-from .network_access import build_network_access
 from .schemas import (
   AppModuleOut,
   AutomationRunCreate,
@@ -25,7 +24,6 @@ from .schemas import (
   MetricOut,
   ModuleAutomationCreate,
   ModuleAutomationOut,
-  NetworkAccessOut,
   WorkspaceOut,
 )
 from .seed import seed_defaults
@@ -86,11 +84,6 @@ def list_sites(session: Session = Depends(get_session)) -> list[ManagedSite]:
 @app.get("/api/bench/summary", response_model=BenchSummaryOut)
 def bench_summary() -> BenchSummaryOut:
   return bench_manager.summary()
-
-
-@app.get("/api/network/access", response_model=NetworkAccessOut)
-def network_access() -> NetworkAccessOut:
-  return build_network_access()
 
 
 @app.post("/api/bench/apps/install", response_model=BenchCommandOut)

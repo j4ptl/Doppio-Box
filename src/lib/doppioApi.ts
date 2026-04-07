@@ -144,12 +144,27 @@ export type NetworkService = {
   command_suggestion: string;
 };
 
+export type SSHAccess = {
+  username: string;
+  host: string;
+  port: number;
+  project_path: string;
+  status: "not-running" | "local-only" | "network-accessible";
+  ssh_command: string;
+  sftp_command: string;
+  scp_download_command: string;
+  rsync_download_command: string;
+  vscode_remote_command: string;
+  suggestion: string;
+};
+
 export type NetworkAccessData = {
   hostname: string;
   ip: string;
   localhost: string;
   interfaces: NetworkInterface[];
   services: NetworkService[];
+  ssh: SSHAccess;
 };
 
 type ElectronNetworkAccess = {

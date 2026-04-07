@@ -153,12 +153,27 @@ class NetworkServiceOut(BaseModel):
   command_suggestion: str = ""
 
 
+class SSHAccessOut(BaseModel):
+  username: str
+  host: str
+  port: int = 22
+  project_path: str
+  status: str
+  ssh_command: str
+  sftp_command: str
+  scp_download_command: str
+  rsync_download_command: str
+  vscode_remote_command: str
+  suggestion: str
+
+
 class NetworkAccessOut(BaseModel):
   hostname: str
   ip: str
   localhost: str = "127.0.0.1"
   interfaces: list[NetworkInterfaceOut]
   services: list[NetworkServiceOut]
+  ssh: SSHAccessOut
 
 
 class WorkspaceOut(BaseModel):
